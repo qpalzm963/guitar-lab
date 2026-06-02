@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Vendored alphaTab runtime assets (minified third-party code served as
+    // static files from /public). Linting minified vendor bundles produces
+    // thousands of false positives; they are not source we maintain.
+    "public/alphatab/**",
   ]),
 ]);
 
