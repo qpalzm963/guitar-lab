@@ -28,24 +28,32 @@ describe("scalePositions — minor pentatonic boxes", () => {
     }
   });
 
-  it("E minor pentatonic box 1 is rooted on the low E open-string octave (fret 12)", () => {
-    // E on the low E string within frets 1–12 is the 12th fret; box 1 anchors there.
+  it("E minor pentatonic box 1 anchors at the open position (frets 0–3)", () => {
+    // E is the open low-E string, so box 1 sits at the open position (not fret 12).
     const pos = scalePositions("E", "minor pentatonic");
     expect(pos.length).toBe(5);
-    expect(pos[0].from).toBe(12);
-    expect(pos[0].to).toBe(15);
+    expect(pos[0].from).toBe(0);
+    expect(pos[0].to).toBe(3);
   });
 
-  it("every box window is within 0..neck and well-ordered (from ≤ to)", () => {
+  it("every offered box starts on the rendered neck and is well-ordered (from ≤ to)", () => {
     for (const root of ["A", "E", "C", "G", "D"]) {
       const pos = scalePositions(root, "minor pentatonic");
       for (const p of pos) {
         expect(p.from).toBeGreaterThanOrEqual(0);
         expect(p.from).toBeLessThanOrEqual(p.to);
-        // Box 5 of some keys runs high; allow up to a 24-fret neck conceptually.
-        expect(p.to).toBeLessThanOrEqual(24);
+        // A box must start within the rendered neck, else it would render empty.
+        expect(p.from).toBeLessThanOrEqual(DEFAULT_FRET_COUNT);
       }
     }
+  });
+
+  it("omits boxes that start past the neck (no empty 把位 for high-root keys)", () => {
+    // C minor pentatonic's upper boxes run past fret 15 and must be dropped.
+    const pos = scalePositions("C", "minor pentatonic");
+    expect(pos.length).toBeGreaterThan(0);
+    expect(pos.length).toBeLessThan(5);
+    for (const p of pos) expect(p.from).toBeLessThanOrEqual(DEFAULT_FRET_COUNT);
   });
 });
 

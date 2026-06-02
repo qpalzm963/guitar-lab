@@ -1,5 +1,5 @@
 import { Note } from "tonal";
-import { chromaAt } from "./fretboard";
+import { chromaAt, DEFAULT_FRET_COUNT } from "./fretboard";
 import { cagedWindows } from "./caged";
 
 /**
@@ -68,9 +68,10 @@ function minorPentBoxes(minorRoot: string): ScalePosition[] {
   const inScale = (chroma: number) =>
     MINOR_PENT_OFFSETS.some((o) => (rc + o) % 12 === chroma);
 
-  // Box 1 anchor: lowest low-E fret in 1..12 that is the root.
+  // Box 1 anchor: lowest low-E fret in 0..12 that is the root (0 = open string,
+  // so an open-string root like low-E E anchors box 1 at the open position).
   let base: number | null = null;
-  for (let f = 1; f <= 12; f++) {
+  for (let f = 0; f <= 12; f++) {
     if (chromaAt("E2", f) === rc) {
       base = f;
       break;
@@ -113,30 +114,36 @@ const STRING_OPEN = ["E4", "B3", "G3", "D3", "A2", "E2"] as const;
 export function scalePositions(
   root: string,
   scaleName: string,
+  maxFret: number = DEFAULT_FRET_COUNT,
 ): ScalePosition[] {
   if (Note.chroma(root) == null) return [];
 
+  let raw: ScalePosition[];
   if (scaleName === "minor pentatonic") {
-    return minorPentBoxes(root);
-  }
-  if (scaleName === "major pentatonic") {
+    raw = minorPentBoxes(root);
+  } else if (scaleName === "major pentatonic") {
     // Major pent shares the 5 boxes of the relative minor (minor-3rd below =
     // +9 semitones). Anchor the boxes there; the windows are identical.
     const relMinor = pc((Note.chroma(root)! + 9) % 12);
-    return minorPentBoxes(relMinor);
-  }
-
-  // Major scale + modes → CAGED-aligned 5 positions.
-  if (scaleName in MODE_TO_MAJOR) {
+    raw = minorPentBoxes(relMinor);
+  } else if (scaleName in MODE_TO_MAJOR) {
+    // Major scale + modes → CAGED-aligned 5 positions.
     const parentMajor = pc((Note.chroma(root)! + MODE_TO_MAJOR[scaleName]) % 12);
-    return cagedWindows(parentMajor).map((w, i) => ({
+    raw = cagedWindows(parentMajor).map((w, i) => ({
       index: i,
       label: `第${i + 1}把位`,
       from: w.from,
       to: w.to,
     }));
+  } else {
+    // No canonical position system (blues, harmonic/melodic minor): whole-neck only.
+    return [];
   }
 
-  // No canonical position system (blues, harmonic/melodic minor): whole-neck only.
-  return [];
+  // Only offer positions that actually appear on the rendered neck (0..maxFret),
+  // so the user never selects a 把位 that renders an empty fretboard. Re-number
+  // the survivors sequentially so the labels stay 第1..第N.
+  return raw
+    .filter((p) => p.from <= maxFret)
+    .map((p, i) => ({ ...p, index: i, label: `第${i + 1}把位` }));
 }
