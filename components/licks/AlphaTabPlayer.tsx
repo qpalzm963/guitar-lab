@@ -10,6 +10,8 @@ import {
   ALPHATAB_MODULE,
   ALPHATAB_SOUNDFONT,
 } from "@/lib/alphatab/assets";
+import { Button } from "@/components/ui/Button";
+import { ToggleButton } from "@/components/ui/ToggleButton";
 
 // We deliberately do NOT `import('@coderline/alphatab')` for the runtime.
 // alphaTab launches its Web Worker + Audio Worklet via
@@ -161,50 +163,38 @@ export function AlphaTabPlayer({ alphaTex }: AlphaTabPlayerProps) {
         ? "text-green-700"
         : "text-gray-500";
 
-  const pill =
-    "rounded-md px-3 py-1.5 text-sm border transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-50";
-
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
-        <button
+        <Button
+          variant="secondary"
           onClick={() => apiRef.current?.playPause()}
           disabled={!canPlay}
-          className={`${pill} border-gray-800 bg-gray-900 text-white hover:bg-gray-700`}
         >
           {!canPlay
             ? "載入播放器…"
             : isPlaying
               ? "⏸ 暫停"
               : "▶ 播放"}
-        </button>
+        </Button>
 
-        <button
+        <ToggleButton
+          active={isLooping}
           onClick={() => setIsLooping((v) => !v)}
-          aria-pressed={isLooping}
-          className={`${pill} ${
-            isLooping
-              ? "border-rose-600 bg-rose-600 text-white"
-              : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-          }`}
         >
           🔁 循環{isLooping ? "(開)" : "(關)"}
-        </button>
+        </ToggleButton>
 
         <div className="flex items-center gap-1">
           <span className="text-sm text-gray-500">速度</span>
           {SPEEDS.map((s) => (
-            <button
+            <ToggleButton
               key={s}
+              active={speed === s}
               onClick={() => setSpeed(s)}
-              className={`${pill} ${
-                speed === s
-                  ? "border-rose-600 bg-rose-600 text-white"
-                  : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-              }`}
             >
               {s === 1 ? "原速" : `${s * 100}%`}
-            </button>
+            </ToggleButton>
           ))}
         </div>
 

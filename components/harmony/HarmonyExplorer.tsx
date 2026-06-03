@@ -6,6 +6,11 @@ import { ROOT_OPTIONS } from "@/lib/theory/notes";
 import { downloadSvgAsPng } from "@/lib/export/svgToPng";
 import type { LabelMode } from "@/lib/store/settings";
 import type { Marker } from "@/lib/theory/types";
+import { Button } from "@/components/ui/Button";
+import { ToggleButton } from "@/components/ui/ToggleButton";
+import { Field, FieldGroup, Select } from "@/components/ui/Field";
+import { ScrollableBoard } from "@/components/ui/ScrollableBoard";
+import { useInitialParams, pickAllowed } from "@/lib/url/useInitialParams";
 import {
   secondaryDominants,
   borrowedChords,
@@ -27,6 +32,23 @@ const CONCEPTS: { id: Concept; label: string }[] = [
   { id: "inversion", label: "轉位和弦" },
   { id: "drop2", label: "Drop 2" },
 ];
+
+// Deep-link concept aliases: the internal ids are short ("secondary"), but the
+// curriculum/lesson slugs and friendlier URLs use longer forms. Map both to the
+// internal Concept id; the canonical ids map to themselves. Anything else is
+// ignored (the concept stays at its default). e.g. /harmony?concept=secondary-dominant.
+const CONCEPT_ALIASES: Record<string, Concept> = {
+  secondary: "secondary",
+  "secondary-dominant": "secondary",
+  borrowed: "borrowed",
+  "major-minor-interchange": "borrowed",
+  tritone: "tritone",
+  "tritone-substitution": "tritone",
+  inversion: "inversion",
+  inversions: "inversion",
+  drop2: "drop2",
+  "drop-2": "drop2",
+};
 
 // Major keys reuse the curated enharmonic root set (clean scale spellings).
 const KEY_OPTIONS = ROOT_OPTIONS;
@@ -58,12 +80,6 @@ const LABELS: { id: LabelMode; label: string }[] = [
   { id: "degree", label: "級數" },
 ];
 
-const pill =
-  "rounded-md px-3 py-1.5 text-sm border transition-colors cursor-pointer";
-const selectCls = "rounded-md border border-gray-300 px-3 py-1.5";
-const activePill = "border-rose-600 bg-rose-600 text-white";
-const idlePill = "border-gray-300 bg-white text-gray-700 hover:bg-gray-50";
-
 function Legend({ entries }: { entries: { color: string; label: string }[] }) {
   return (
     <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500">
@@ -82,12 +98,33 @@ function Legend({ entries }: { entries: { color: string; label: string }[] }) {
 
 export function HarmonyExplorer() {
   const [concept, setConcept] = useState<Concept>("secondary");
-  const [labels, setLabels] = useState<LabelMode>("degree");
+  // Default to 音名 (name) for consistency with the other explorers.
+  const [labels, setLabels] = useState<LabelMode>("name");
   const [busy, setBusy] = useState(false);
   const boardRef = useRef<HTMLDivElement>(null);
 
   // Per-concept controls (each concept keeps its own independent selection).
   const [key, setKey] = useState("C"); // secondary + borrowed
+
+  // Deep-link seeding (client only, after mount). e.g.
+  // /harmony?concept=secondary-dominant&key=C. concept maps via CONCEPT_ALIASES;
+  // key validates against ROOT_OPTIONS (used by secondary/borrowed). Invalid or
+  // missing params are ignored. Applied via the repo's "adjust state during
+  // render when an input changes" pattern, not a setState-in-effect: params is
+  // null until hydration, so this fires once when it first becomes non-null.
+  const params = useInitialParams();
+  const [seededFrom, setSeededFrom] = useState<Record<string, string> | null>(
+    null,
+  );
+  if (params && params !== seededFrom) {
+    setSeededFrom(params);
+    const rawConcept = params.concept;
+    if (rawConcept != null && CONCEPT_ALIASES[rawConcept]) {
+      setConcept(CONCEPT_ALIASES[rawConcept]);
+    }
+    const k = pickAllowed(params, "key", KEY_OPTIONS);
+    if (k) setKey(k);
+  }
   const [secTarget, setSecTarget] = useState("V"); // chosen secondary-dom target
   const [borrowLabel, setBorrowLabel] = useState("iv");
   const [tritoneChord, setTritoneChord] = useState("G7");
@@ -332,230 +369,208 @@ export function HarmonyExplorer() {
       {/* concept selector */}
       <div className="flex flex-wrap gap-1">
         {CONCEPTS.map((c) => (
-          <button
+          <ToggleButton
             key={c.id}
+            active={concept === c.id}
             onClick={() => setConcept(c.id)}
-            className={`${pill} ${concept === c.id ? activePill : idlePill}`}
           >
             {c.label}
-          </button>
+          </ToggleButton>
         ))}
       </div>
 
       {/* per-concept controls */}
       <div className="flex flex-wrap items-end gap-6">
         {(concept === "secondary" || concept === "borrowed") && (
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="text-gray-500">調 Key (大調)</span>
-            <select
-              value={key}
-              onChange={(e) => setKey(e.target.value)}
-              className={selectCls}
-            >
+          <Field label="調 Key (大調)">
+            <Select value={key} onChange={(e) => setKey(e.target.value)}>
               {KEY_OPTIONS.map((k) => (
                 <option key={k} value={k}>
                   {k}
                 </option>
               ))}
-            </select>
-          </label>
+            </Select>
+          </Field>
         )}
 
         {concept === "secondary" && (
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="text-gray-500">目標和弦 Target</span>
-            <select
+          <Field label="目標和弦 Target">
+            <Select
               value={secTarget}
               onChange={(e) => setSecTarget(e.target.value)}
-              className={`${selectCls} min-w-56`}
+              className="min-w-56"
             >
               {secList.map((s) => (
                 <option key={s.target} value={s.target}>
                   {s.label} → {s.target}({s.targetChord}) = {s.chord.symbol}
                 </option>
               ))}
-            </select>
-          </label>
+            </Select>
+          </Field>
         )}
 
         {concept === "borrowed" && (
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="text-gray-500">借用和弦 Borrowed</span>
-            <select
+          <Field label="借用和弦 Borrowed">
+            <Select
               value={borrowLabel}
               onChange={(e) => setBorrowLabel(e.target.value)}
-              className={`${selectCls} min-w-56`}
+              className="min-w-56"
             >
               {borrowList.map((b) => (
                 <option key={b.label} value={b.label}>
                   {b.label} = {b.chord.symbol}
                 </option>
               ))}
-            </select>
-          </label>
+            </Select>
+          </Field>
         )}
 
         {concept === "tritone" && (
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="text-gray-500">屬七和弦 Dominant 7th</span>
-            <select
+          <Field label="屬七和弦 Dominant 7th">
+            <Select
               value={tritoneChord}
               onChange={(e) => setTritoneChord(e.target.value)}
-              className={selectCls}
             >
               {DOM7_OPTIONS.map((c) => (
                 <option key={c} value={c}>
                   {c}
                 </option>
               ))}
-            </select>
-          </label>
+            </Select>
+          </Field>
         )}
 
         {concept === "inversion" && (
           <>
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="text-gray-500">根音 Root</span>
-              <select
+            <Field label="根音 Root">
+              <Select
                 value={invRoot}
                 onChange={(e) => setInvRoot(e.target.value)}
-                className={selectCls}
               >
                 {ROOT_OPTIONS.map((n) => (
                   <option key={n} value={n}>
                     {n}
                   </option>
                 ))}
-              </select>
-            </label>
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="text-gray-500">和弦 Chord</span>
-              <select
+              </Select>
+            </Field>
+            <Field label="和弦 Chord">
+              <Select
                 value={invQuality}
                 onChange={(e) => {
                   setInvQuality(e.target.value);
                   setInvIdx(0);
                 }}
-                className={`${selectCls} min-w-56`}
+                className="min-w-56"
               >
                 {INVERSION_QUALITIES.map((q) => (
                   <option key={q.id} value={q.id}>
                     {q.label}
                   </option>
                 ))}
-              </select>
-            </label>
-            <div className="flex flex-col gap-1 text-sm">
-              <span className="text-gray-500">轉位 Inversion</span>
+              </Select>
+            </Field>
+            <FieldGroup label="轉位 Inversion">
               <div className="flex flex-wrap gap-1">
                 {invList.map((iv, i) => (
-                  <button
+                  <ToggleButton
                     key={iv.symbol}
+                    active={invIdx === i}
                     onClick={() => setInvIdx(i)}
-                    className={`${pill} ${invIdx === i ? activePill : idlePill}`}
                   >
                     {iv.label}
-                  </button>
+                  </ToggleButton>
                 ))}
               </div>
-            </div>
+            </FieldGroup>
           </>
         )}
 
         {concept === "drop2" && (
           <>
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="text-gray-500">根音 Root</span>
-              <select
+            <Field label="根音 Root">
+              <Select
                 value={drop2Root}
                 onChange={(e) => setDrop2Root(e.target.value)}
-                className={selectCls}
               >
                 {ROOT_OPTIONS.map((n) => (
                   <option key={n} value={n}>
                     {n}
                   </option>
                 ))}
-              </select>
-            </label>
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="text-gray-500">七和弦 7th chord</span>
-              <select
+              </Select>
+            </Field>
+            <Field label="七和弦 7th chord">
+              <Select
                 value={drop2Quality}
                 onChange={(e) => setDrop2Quality(e.target.value)}
-                className={`${selectCls} min-w-48`}
+                className="min-w-48"
               >
                 {DROP2_QUALITIES.map((q) => (
                   <option key={q.id} value={q.id}>
                     {q.label}
                   </option>
                 ))}
-              </select>
-            </label>
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="text-gray-500">弦組 String set</span>
-              <select
+              </Select>
+            </Field>
+            <Field label="弦組 String set">
+              <Select
                 value={drop2Set}
                 onChange={(e) => setDrop2Set(e.target.value)}
-                className={`${selectCls} min-w-44`}
+                className="min-w-44"
               >
                 {DROP2_STRING_SETS.map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.label}
                   </option>
                 ))}
-              </select>
-            </label>
-            <div className="flex flex-col gap-1 text-sm">
-              <span className="text-gray-500">轉位 Inversion</span>
+              </Select>
+            </Field>
+            <FieldGroup label="轉位 Inversion">
               <div className="flex flex-wrap gap-1">
                 {drop2List.map((d, i) => (
-                  <button
+                  <ToggleButton
                     key={d.inversion}
+                    active={drop2Inv === i}
                     onClick={() => setDrop2Inv(i)}
-                    className={`${pill} ${drop2Inv === i ? activePill : idlePill}`}
                   >
                     {d.label}
-                  </button>
+                  </ToggleButton>
                 ))}
               </div>
-            </div>
+            </FieldGroup>
           </>
         )}
 
         {/* label toggle + export (shared) */}
-        <div className="flex flex-col gap-1 text-sm">
-          <span className="text-gray-500">標籤 Label</span>
+        <FieldGroup label="標籤 Label">
           <div className="flex gap-1">
             {LABELS.map((l) => (
-              <button
+              <ToggleButton
                 key={l.id}
+                active={labels === l.id}
                 onClick={() => setLabels(l.id)}
-                className={`${pill} ${labels === l.id ? activePill : idlePill}`}
               >
                 {l.label}
-              </button>
+              </ToggleButton>
             ))}
           </div>
-        </div>
+        </FieldGroup>
 
-        <button
+        <Button
+          variant="secondary"
           onClick={exportPng}
           disabled={busy || markers.length === 0}
-          className={`${pill} border-gray-800 bg-gray-900 text-white hover:bg-gray-700 disabled:opacity-50`}
         >
           {busy ? "匯出中…" : "匯出 PNG"}
-        </button>
+        </Button>
       </div>
 
       {legend.length > 0 && <Legend entries={legend} />}
 
-      <div
-        ref={boardRef}
-        className="overflow-x-auto rounded-lg border border-gray-200 bg-white p-4"
-      >
+      <ScrollableBoard ref={boardRef}>
         <Fretboard markers={markers} labelMode={labels} toFret={15} />
-      </div>
+      </ScrollableBoard>
 
       <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm leading-relaxed">
         {explanation}

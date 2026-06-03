@@ -5,6 +5,7 @@ import { Fretboard } from "@/components/fretboard/Fretboard";
 import { DiagramEditor } from "./DiagramEditor";
 import { downloadSvgAsPng } from "@/lib/export/svgToPng";
 import { useDiagrams, type SavedDiagram } from "@/lib/store/diagrams";
+import { Button } from "@/components/ui/Button";
 
 // Open/edit avoids a dynamic [id] route (static export can't prerender runtime
 // ids): the editor is rendered inline via local view state. "list" shows the
@@ -74,18 +75,16 @@ export function DiagramLibrary() {
     reader.readAsText(file);
   }
 
-  const pill =
-    "rounded-md px-3 py-1.5 text-sm border transition-colors cursor-pointer";
-
   if (view.mode === "edit") {
     return (
       <div className="space-y-4">
-        <button
+        <Button
+          variant="ghost"
           onClick={() => setView({ mode: "list" })}
-          className={`${pill} no-print border-gray-300 bg-white text-gray-700 hover:bg-gray-50`}
+          className="no-print"
         >
           ← 返回圖庫
-        </button>
+        </Button>
         <DiagramEditor
           initial={view.diagram}
           onSaved={() => setView({ mode: "list" })}
@@ -97,24 +96,15 @@ export function DiagramLibrary() {
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap gap-3">
-        <button
-          onClick={() => setView({ mode: "edit" })}
-          className={`${pill} border-rose-600 bg-rose-600 text-white hover:bg-rose-700`}
-        >
+        <Button variant="primary" onClick={() => setView({ mode: "edit" })}>
           + 新增圖表
-        </button>
-        <button
-          onClick={backupJson}
-          className={`${pill} border-gray-300 bg-white text-gray-700 hover:bg-gray-50`}
-        >
+        </Button>
+        <Button variant="ghost" onClick={backupJson}>
           匯出 JSON 備份
-        </button>
-        <button
-          onClick={() => fileRef.current?.click()}
-          className={`${pill} border-gray-300 bg-white text-gray-700 hover:bg-gray-50`}
-        >
+        </Button>
+        <Button variant="ghost" onClick={() => fileRef.current?.click()}>
           匯入 JSON
-        </button>
+        </Button>
         <input
           ref={fileRef}
           type="file"
@@ -122,16 +112,16 @@ export function DiagramLibrary() {
           onChange={onImportFile}
           className="hidden"
         />
-        <button
+        <Button
+          variant="ghost"
           onClick={() => {
             if (window.confirm("確定要清空整個圖庫嗎?此動作無法復原。")) {
               clearAll();
             }
           }}
-          className={`${pill} border-gray-300 bg-white text-gray-700 hover:bg-gray-50`}
         >
           清空圖庫
-        </button>
+        </Button>
       </div>
 
       {!hydrated ? (
@@ -168,26 +158,26 @@ export function DiagramLibrary() {
                 />
               </div>
               <div className="mt-1 flex flex-wrap gap-2">
-                <button
+                <Button
+                  variant="secondary"
                   onClick={() => setView({ mode: "edit", diagram: d })}
-                  className={`${pill} border-gray-800 bg-gray-900 text-white hover:bg-gray-700`}
                 >
                   開啟 / 編輯
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="ghost"
                   onClick={() => exportItemPng(d.id, d.name)}
-                  className={`${pill} border-gray-300 bg-white text-gray-700 hover:bg-gray-50`}
                 >
                   匯出 PNG
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="ghost"
                   onClick={() => {
                     if (window.confirm(`刪除「${d.name}」?`)) remove(d.id);
                   }}
-                  className={`${pill} border-gray-300 bg-white text-gray-700 hover:bg-gray-50`}
                 >
                   刪除
-                </button>
+                </Button>
               </div>
             </li>
           ))}

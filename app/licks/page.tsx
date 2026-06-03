@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { LicksViewer } from "@/components/licks/LicksViewer";
+import { PageShell } from "@/components/ui/PageShell";
 
 export const metadata: Metadata = {
   title: "樂句庫 · guitar-lab",
@@ -12,12 +13,12 @@ export const metadata: Metadata = {
 // so all the heavy runtime stays in the /licks bundle.
 export default function LicksPage() {
   return (
-    <main className="mx-auto max-w-5xl p-6">
-      <h1 className="mb-1 text-2xl font-bold">樂句庫</h1>
-      <p className="mb-6 text-sm text-gray-500">
-        依音階與曲風兩軸挑選樂句,渲染六線譜+五線譜;可播放、循環、調整速度,並顯示播放游標。
-      </p>
+    <PageShell
+      eyebrow="練習與製作"
+      title="樂句庫"
+      subtitle="依音階與曲風兩軸挑選樂句,渲染六線譜+五線譜;可播放、循環、調整速度,並顯示播放游標。"
+    >
       <LicksViewer />
-    </main>
+    </PageShell>
   );
 }

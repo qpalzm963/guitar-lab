@@ -13,15 +13,13 @@ import {
   type AccentMode,
   type MetronomeConfig,
 } from "@/lib/audio/metronome";
+import { Button } from "@/components/ui/Button";
+import { ToggleButton } from "@/components/ui/ToggleButton";
+import { FieldGroup } from "@/components/ui/Field";
 
 // The visual beat indicator and all config live in React state. The audio
 // engine (Tone.js) is created lazily on the first 開始 click — never at module
 // scope and never during render — so this stays SSR-/static-export-safe.
-
-const pill =
-  "rounded-md px-3 py-1.5 text-sm border transition-colors cursor-pointer";
-const active = "border-rose-600 bg-rose-600 text-white";
-const inactive = "border-gray-300 bg-white text-gray-700 hover:bg-gray-50";
 
 export function Metronome() {
   const [bpm, setBpm] = useState(90);
@@ -110,16 +108,13 @@ export function Metronome() {
     <section className="space-y-5 rounded-lg border border-gray-200 bg-white p-5">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">節拍器</h2>
-        <button
+        <Button
+          variant={running ? "secondary" : "primary"}
           onClick={toggle}
-          className={`${pill} ${
-            running
-              ? "border-gray-800 bg-gray-900 text-white hover:bg-gray-700"
-              : active
-          } min-w-20`}
+          className="min-w-20"
         >
           {running ? "停止" : "開始"}
-        </button>
+        </Button>
       </div>
 
       {/* Visual beat indicator */}
@@ -167,52 +162,49 @@ export function Metronome() {
       </div>
 
       {/* Beats per bar */}
-      <div className="flex flex-col gap-1 text-sm">
-        <span className="text-gray-500">每小節拍數</span>
+      <FieldGroup label="每小節拍數">
         <div className="flex gap-1">
           {BEATS_PER_BAR_OPTIONS.map((n) => (
-            <button
+            <ToggleButton
               key={n}
+              active={beatsPerBar === n}
               onClick={() => setBeatsPerBar(n)}
-              className={`${pill} ${beatsPerBar === n ? active : inactive}`}
             >
               {n}
-            </button>
+            </ToggleButton>
           ))}
         </div>
-      </div>
+      </FieldGroup>
 
       {/* Subdivision */}
-      <div className="flex flex-col gap-1 text-sm">
-        <span className="text-gray-500">細分音符</span>
+      <FieldGroup label="細分音符">
         <div className="flex flex-wrap gap-1">
           {SUBDIVISIONS.map((s) => (
-            <button
+            <ToggleButton
               key={s.id}
+              active={subdivision === s.id}
               onClick={() => setSubdivision(s.id)}
-              className={`${pill} ${subdivision === s.id ? active : inactive}`}
             >
               {s.label}
-            </button>
+            </ToggleButton>
           ))}
         </div>
-      </div>
+      </FieldGroup>
 
       {/* Accent mode */}
-      <div className="flex flex-col gap-1 text-sm">
-        <span className="text-gray-500">重音</span>
+      <FieldGroup label="重音">
         <div className="flex flex-wrap gap-1">
           {ACCENT_MODES.map((m) => (
-            <button
+            <ToggleButton
               key={m.id}
+              active={accentMode === m.id}
               onClick={() => setAccentMode(m.id)}
-              className={`${pill} ${accentMode === m.id ? active : inactive}`}
             >
               {m.label}
-            </button>
+            </ToggleButton>
           ))}
         </div>
-      </div>
+      </FieldGroup>
 
       {/* Tempo ramp (加速練習) */}
       <div className="space-y-2 rounded-md border border-gray-200 p-3">

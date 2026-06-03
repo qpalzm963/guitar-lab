@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { LESSONS, getLesson } from "@/lib/course/data";
 import { LessonView } from "@/components/course/LessonView";
+import { PageShell } from "@/components/ui/PageShell";
 
 // Static export: the lesson slugs are known at build time, so generateStaticParams
 // enumerates all five and Next prerenders course/<slug>.html for each. No runtime
@@ -38,10 +39,13 @@ export default async function LessonPage({
   if (!lesson) notFound();
 
   return (
-    <main className="mx-auto max-w-3xl p-6">
-      <h1 className="mb-1 text-2xl font-bold">{lesson.title}</h1>
-      <p className="mb-6 text-sm text-gray-500">{lesson.summary}</p>
+    <PageShell
+      eyebrow={`第 ${lesson.order} 課`}
+      title={lesson.title}
+      width="reading"
+      subtitle={lesson.summary}
+    >
       <LessonView lesson={lesson} />
-    </main>
+    </PageShell>
   );
 }

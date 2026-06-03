@@ -6,6 +6,11 @@ import { intervalMarkers, INTERVALS } from "@/lib/theory/intervals";
 import { downloadSvgAsPng } from "@/lib/export/svgToPng";
 import { ROOT_OPTIONS } from "@/lib/theory/notes";
 import type { LabelMode } from "@/lib/store/settings";
+import { Button } from "@/components/ui/Button";
+import { ToggleButton } from "@/components/ui/ToggleButton";
+import { Field, FieldGroup, Select } from "@/components/ui/Field";
+import { ScrollableBoard } from "@/components/ui/ScrollableBoard";
+import { useInitialParams, pickAllowed } from "@/lib/url/useInitialParams";
 
 // Interval tool keeps name/級數 only; an interval board without labels conveys
 // little (same rationale as the chord tool). Local state — no persisted store.
@@ -54,15 +59,51 @@ function newRound(): Round {
 const intervalLabel = (id: string) =>
   INTERVALS.find((i) => i.id === id)?.label ?? id;
 
+// The interval option ids are digit-first (tonal form, e.g. "5P", "3M", "4A").
+// Deep-link URLs are friendlier as quality-first ("P5", "M3"), so accept either:
+// flip a leading quality letter to the digit-first id before validating. A value
+// already in canonical form (or anything unrecognized) is returned unchanged and
+// then validated by pickAllowed against INTERVALS — so junk is still ignored.
+function normalizeIntervalParam(value: string): string {
+  const m = /^([PMmAd])(\d+)$/.exec(value);
+  return m ? `${m[2]}${m[1]}` : value;
+}
+
 export function IntervalExplorer() {
   const [mode, setMode] = useState<Mode>("reference");
 
   // --- reference mode state ---
   const [root, setRoot] = useState("C");
   const [interval, setInterval] = useState("5P");
-  const [labels, setLabels] = useState<LabelMode>("degree");
+  // Default to 音名 (name) for consistency with the other explorers.
+  const [labels, setLabels] = useState<LabelMode>("name");
   const [busy, setBusy] = useState(false);
   const boardRef = useRef<HTMLDivElement>(null);
+
+  // Deep-link seeding (client only, after mount). e.g. /intervals?root=C&interval=P5.
+  // Accepts quality-first (P5) or canonical (5P) interval ids; validated against
+  // ROOT_OPTIONS / INTERVALS; invalid/missing ignored. Seeds reference mode.
+  // Applied via the repo's "adjust state during render when an input changes"
+  // pattern, not a setState-in-effect: params is null until hydration, so this
+  // fires once when it first becomes non-null.
+  const params = useInitialParams();
+  const [seededFrom, setSeededFrom] = useState<Record<string, string> | null>(
+    null,
+  );
+  if (params && params !== seededFrom) {
+    setSeededFrom(params);
+    const r = pickAllowed(params, "root", ROOT_OPTIONS);
+    if (r) setRoot(r);
+    const rawIvl = params.interval;
+    if (rawIvl != null) {
+      const ivl = pickAllowed(
+        { interval: normalizeIntervalParam(rawIvl) },
+        "interval",
+        INTERVALS.map((i) => i.id),
+      );
+      if (ivl) setInterval(ivl);
+    }
+  }
 
   const markers = useMemo(
     () => intervalMarkers(root, interval),
@@ -108,7 +149,10 @@ export function IntervalExplorer() {
     }
   }
 
-  const pill =
+  // The quiz answer options aren't toggles — emerald=correct, rose=wrong-pick
+  // is answer FEEDBACK, not selection — so they stay raw buttons. This is just
+  // the shared pill geometry they reuse.
+  const quizPill =
     "rounded-md px-3 py-1.5 text-sm border transition-colors cursor-pointer";
   const legend = (
     <div className="flex items-center gap-4 text-xs text-gray-500">
@@ -125,97 +169,68 @@ export function IntervalExplorer() {
     <div className="space-y-5">
       {/* mode switch */}
       <div className="flex gap-1">
-        <button
+        <ToggleButton
+          active={mode === "reference"}
           onClick={() => setMode("reference")}
-          className={`${pill} ${
-            mode === "reference"
-              ? "border-rose-600 bg-rose-600 text-white"
-              : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-          }`}
         >
           參考
-        </button>
-        <button
-          onClick={() => setMode("quiz")}
-          className={`${pill} ${
-            mode === "quiz"
-              ? "border-rose-600 bg-rose-600 text-white"
-              : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-          }`}
-        >
+        </ToggleButton>
+        <ToggleButton active={mode === "quiz"} onClick={() => setMode("quiz")}>
           視覺測驗
-        </button>
+        </ToggleButton>
       </div>
 
       {mode === "reference" ? (
         <>
           <div className="flex flex-wrap items-end gap-6">
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="text-gray-500">根音 Root</span>
-              <select
-                value={root}
-                onChange={(e) => setRoot(e.target.value)}
-                className="rounded-md border border-gray-300 px-3 py-1.5"
-              >
+            <Field label="根音 Root">
+              <Select value={root} onChange={(e) => setRoot(e.target.value)}>
                 {ROOT_OPTIONS.map((n) => (
                   <option key={n} value={n}>
                     {n}
                   </option>
                 ))}
-              </select>
-            </label>
+              </Select>
+            </Field>
 
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="text-gray-500">音程 Interval</span>
-              <select
+            <Field label="音程 Interval">
+              <Select
                 value={interval}
                 onChange={(e) => setInterval(e.target.value)}
-                className="rounded-md border border-gray-300 px-3 py-1.5 min-w-64"
+                className="min-w-64"
               >
                 {INTERVALS.map((i) => (
                   <option key={i.id} value={i.id}>
                     {i.label}
                   </option>
                 ))}
-              </select>
-            </label>
+              </Select>
+            </Field>
 
-            <div className="flex flex-col gap-1 text-sm">
-              <span className="text-gray-500">標籤 Label</span>
+            <FieldGroup label="標籤 Label">
               <div className="flex gap-1">
                 {LABELS.map((l) => (
-                  <button
+                  <ToggleButton
                     key={l.id}
+                    active={labels === l.id}
                     onClick={() => setLabels(l.id)}
-                    className={`${pill} ${
-                      labels === l.id
-                        ? "border-rose-600 bg-rose-600 text-white"
-                        : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-                    }`}
                   >
                     {l.label}
-                  </button>
+                  </ToggleButton>
                 ))}
               </div>
-            </div>
+            </FieldGroup>
 
-            <button
-              onClick={exportPng}
-              disabled={busy}
-              className={`${pill} border-gray-800 bg-gray-900 text-white hover:bg-gray-700 disabled:opacity-50`}
-            >
+            <Button variant="secondary" onClick={exportPng} disabled={busy}>
               {busy ? "匯出中…" : "匯出 PNG"}
-            </button>
+            </Button>
           </div>
 
           {legend}
 
-          <div
-            ref={boardRef}
-            className="overflow-x-auto rounded-lg border border-gray-200 bg-white p-4"
-          >
+          <ScrollableBoard ref={boardRef}>
             <Fretboard markers={markers} labelMode={labels} toFret={15} />
-          </div>
+          </ScrollableBoard>
         </>
       ) : (
         <>
@@ -227,21 +242,18 @@ export function IntervalExplorer() {
             <span className="text-sm text-gray-500">
               得分 {score}/{total}
             </span>
-            <button
-              onClick={resetQuiz}
-              className={`${pill} border-gray-300 bg-white text-gray-700 hover:bg-gray-50`}
-            >
+            <Button variant="ghost" onClick={resetQuiz}>
               重設
-            </button>
+            </Button>
           </div>
 
           {legend}
 
           {/* Quiz board: degrees hidden (labelMode none) so the answer isn't
               given away by the degree text on the blue note. */}
-          <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white p-4">
+          <ScrollableBoard>
             <Fretboard markers={quizMarkers} labelMode="none" toFret={15} />
-          </div>
+          </ScrollableBoard>
 
           <div className="flex flex-wrap gap-2">
             {round.options.map((id) => {
@@ -260,7 +272,7 @@ export function IntervalExplorer() {
                   key={id}
                   onClick={() => answer(id)}
                   disabled={!!picked}
-                  className={`${pill} ${cls} disabled:cursor-default`}
+                  className={`${quizPill} ${cls} disabled:cursor-default`}
                 >
                   {intervalLabel(id)}
                 </button>
@@ -277,12 +289,9 @@ export function IntervalExplorer() {
                   {intervalLabel(round.answerId)}
                 </span>
               </span>
-              <button
-                onClick={nextRound}
-                className={`${pill} border-gray-800 bg-gray-900 text-white hover:bg-gray-700`}
-              >
+              <Button variant="secondary" onClick={nextRound}>
                 下一題 →
-              </button>
+              </Button>
             </div>
           )}
         </>

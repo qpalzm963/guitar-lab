@@ -10,6 +10,7 @@ import {
   type CurriculumCategory,
 } from "@/lib/curriculum/data";
 import { useProgress } from "@/lib/store/progress";
+import { lessonSlugForItem } from "@/lib/course/data";
 
 // Category badge colors. Kept muted so the row content stays the focus; the
 // legend at the top spells each letter out in zh-TW.
@@ -25,6 +26,9 @@ function ItemRow({ item }: { item: CurriculumItem }) {
   // the record (not calling isDone) keeps the subscription value-based.
   const done = useProgress((s) => s.done[item.id] === true);
   const toggle = useProgress((s) => s.toggle);
+  // For items with no built tool, the course lesson (if any) that teaches this
+  // item — so we can offer 看課程 instead of a dead 規劃中 badge.
+  const lessonSlug = item.tool ? undefined : lessonSlugForItem(item.id);
 
   return (
     <li className="flex items-center gap-2 py-1.5">
@@ -50,6 +54,15 @@ function ItemRow({ item }: { item: CurriculumItem }) {
           className="shrink-0 rounded-md border border-rose-200 px-2 py-0.5 text-xs text-rose-700 hover:bg-rose-50"
         >
           開啟工具 →
+        </Link>
+      ) : lessonSlug ? (
+        // No built tool, but a course lesson teaches this item — link there
+        // instead of a dead 規劃中 badge.
+        <Link
+          href={`/course/${lessonSlug}`}
+          className="shrink-0 rounded-md border border-amber-200 px-2 py-0.5 text-xs text-amber-700 hover:bg-amber-50"
+        >
+          看課程 →
         </Link>
       ) : (
         <span className="shrink-0 rounded-md border border-gray-200 px-2 py-0.5 text-xs text-gray-400">

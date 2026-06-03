@@ -8,6 +8,11 @@ import { findChordShape } from "@/data/chordShapes";
 import { downloadSvgsAsPng } from "@/lib/export/svgToPng";
 import { ROOT_OPTIONS } from "@/lib/theory/notes";
 import type { LabelMode } from "@/lib/store/settings";
+import { Button } from "@/components/ui/Button";
+import { ToggleButton } from "@/components/ui/ToggleButton";
+import { Field, FieldGroup, Select } from "@/components/ui/Field";
+import { ScrollableBoard } from "@/components/ui/ScrollableBoard";
+import { useInitialParams, pickAllowed } from "@/lib/url/useInitialParams";
 
 // Chord tool keeps name/級數 only; "無" is omitted because a chord box without
 // labels conveys little. Local state (no persisted store) — settings.ts is the
@@ -23,6 +28,28 @@ export function ChordExplorer() {
   const [labels, setLabels] = useState<LabelMode>("name");
   const [busy, setBusy] = useState(false);
   const boardRef = useRef<HTMLDivElement>(null);
+
+  // Deep-link seeding (client only, after mount). e.g. /chords?root=C&type=maj7.
+  // Validated against ROOT_OPTIONS / CHORD_TYPES ids ("" = major triad is a
+  // valid id); invalid/missing params are ignored. Applied via the repo's
+  // "adjust state during render when an input changes" pattern (see the posKey
+  // pattern in FretboardExplorer) rather than a setState-in-effect: params is
+  // null until hydration, so this fires once when it first becomes non-null.
+  const params = useInitialParams();
+  const [seededFrom, setSeededFrom] = useState<Record<string, string> | null>(
+    null,
+  );
+  if (params && params !== seededFrom) {
+    setSeededFrom(params);
+    const r = pickAllowed(params, "root", ROOT_OPTIONS);
+    if (r) setRoot(r);
+    const t = pickAllowed(
+      params,
+      "type",
+      CHORD_TYPES.map((c) => c.id),
+    );
+    if (t !== undefined) setType(t);
+  }
 
   const markers = useMemo(() => chordMarkers(root, type), [root, type]);
   const shape = useMemo(() => findChordShape(root, type), [root, type]);
@@ -42,68 +69,50 @@ export function ChordExplorer() {
     }
   }
 
-  const pill =
-    "rounded-md px-3 py-1.5 text-sm border transition-colors cursor-pointer";
-
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-end gap-6">
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-gray-500">根音 Root</span>
-          <select
-            value={root}
-            onChange={(e) => setRoot(e.target.value)}
-            className="rounded-md border border-gray-300 px-3 py-1.5"
-          >
+        <Field label="根音 Root">
+          <Select value={root} onChange={(e) => setRoot(e.target.value)}>
             {ROOT_OPTIONS.map((n) => (
               <option key={n} value={n}>
                 {n}
               </option>
             ))}
-          </select>
-        </label>
+          </Select>
+        </Field>
 
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-gray-500">和弦 Chord</span>
-          <select
+        <Field label="和弦 Chord">
+          <Select
             value={type}
             onChange={(e) => setType(e.target.value)}
-            className="rounded-md border border-gray-300 px-3 py-1.5 min-w-56"
+            className="min-w-56"
           >
             {CHORD_TYPES.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.label}
               </option>
             ))}
-          </select>
-        </label>
+          </Select>
+        </Field>
 
-        <div className="flex flex-col gap-1 text-sm">
-          <span className="text-gray-500">標籤 Label</span>
+        <FieldGroup label="標籤 Label">
           <div className="flex gap-1">
             {LABELS.map((l) => (
-              <button
+              <ToggleButton
                 key={l.id}
+                active={labels === l.id}
                 onClick={() => setLabels(l.id)}
-                className={`${pill} ${
-                  labels === l.id
-                    ? "border-rose-600 bg-rose-600 text-white"
-                    : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-                }`}
               >
                 {l.label}
-              </button>
+              </ToggleButton>
             ))}
           </div>
-        </div>
+        </FieldGroup>
 
-        <button
-          onClick={exportPng}
-          disabled={busy}
-          className={`${pill} border-gray-800 bg-gray-900 text-white hover:bg-gray-700 disabled:opacity-50`}
-        >
+        <Button variant="secondary" onClick={exportPng} disabled={busy}>
           {busy ? "匯出中…" : "匯出 PNG"}
-        </button>
+        </Button>
       </div>
 
       <div className="flex items-center gap-4 text-xs text-gray-500">
@@ -115,10 +124,7 @@ export function ChordExplorer() {
         </span>
       </div>
 
-      <div
-        ref={boardRef}
-        className="space-y-4 overflow-x-auto rounded-lg border border-gray-200 bg-white p-4"
-      >
+      <ScrollableBoard ref={boardRef} className="space-y-4">
         <Fretboard markers={markers} labelMode={labels} toFret={15} />
         {shape ? (
           <div>
@@ -126,7 +132,7 @@ export function ChordExplorer() {
             <ChordDiagram shape={shape} />
           </div>
         ) : null}
-      </div>
+      </ScrollableBoard>
     </div>
   );
 }

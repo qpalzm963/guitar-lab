@@ -130,7 +130,7 @@ export function LessonView({ lesson }: { lesson: Lesson }) {
           {lesson.tools.map((t) => (
             <Link
               key={t}
-              href={t}
+              href={`${t}${lesson.toolParams?.[t] ?? ""}`}
               className="rounded-md border border-rose-200 px-3 py-1.5 text-sm text-rose-700 transition-colors hover:bg-rose-50"
             >
               開啟{TOOL_LABEL[t]} →

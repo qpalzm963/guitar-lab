@@ -11,6 +11,8 @@ import {
   type ScaleId,
   type StyleId,
 } from "@/lib/licks/data";
+import { ToggleButton } from "@/components/ui/ToggleButton";
+import { FieldGroup } from "@/components/ui/Field";
 
 // Two-axis browser: a 音階 (scale) selector AND a 曲風 (style) selector. Either can
 // be "全部" (no filter on that axis); the intersection drives the list. Selecting
@@ -29,83 +31,62 @@ export function LicksViewer() {
     [matches, selectedId],
   );
 
-  const pill =
-    "rounded-md px-3 py-1.5 text-sm border transition-colors cursor-pointer";
-  const axisButton = (active: boolean) =>
-    `${pill} ${
-      active
-        ? "border-rose-600 bg-rose-600 text-white"
-        : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-    }`;
-
   return (
     <div className="space-y-5">
       {/* Axis 1: 音階 */}
-      <div className="flex flex-col gap-1 text-sm">
-        <span className="text-gray-500">音階 Scale</span>
+      <FieldGroup label="音階 Scale">
         <div className="flex flex-wrap gap-1">
-          <button
-            onClick={() => setScale(null)}
-            className={axisButton(scale === null)}
-          >
+          <ToggleButton active={scale === null} onClick={() => setScale(null)}>
             全部
-          </button>
+          </ToggleButton>
           {SCALES.map((s) => (
-            <button
+            <ToggleButton
               key={s.id}
+              active={scale === s.id}
               onClick={() => setScale(s.id)}
-              className={axisButton(scale === s.id)}
             >
               {s.label}
-            </button>
+            </ToggleButton>
           ))}
         </div>
-      </div>
+      </FieldGroup>
 
       {/* Axis 2: 曲風 */}
-      <div className="flex flex-col gap-1 text-sm">
-        <span className="text-gray-500">曲風 Style</span>
+      <FieldGroup label="曲風 Style">
         <div className="flex flex-wrap gap-1">
-          <button
-            onClick={() => setStyle(null)}
-            className={axisButton(style === null)}
-          >
+          <ToggleButton active={style === null} onClick={() => setStyle(null)}>
             全部
-          </button>
+          </ToggleButton>
           {STYLES.map((s) => (
-            <button
+            <ToggleButton
               key={s.id}
+              active={style === s.id}
               onClick={() => setStyle(s.id)}
-              className={axisButton(style === s.id)}
             >
               {s.label}
-            </button>
+            </ToggleButton>
           ))}
         </div>
-      </div>
+      </FieldGroup>
 
       {/* Matching licks */}
-      <div className="flex flex-col gap-1 text-sm">
-        <span className="text-gray-500">樂句 ({matches.length})</span>
+      <FieldGroup label={`樂句 (${matches.length})`}>
         {matches.length === 0 ? (
           <p className="text-sm text-gray-500">此組合暫無樂句,試試其他篩選。</p>
         ) : (
           <div className="flex flex-wrap gap-1">
-            {matches.map((l) => {
-              const active = selected?.id === l.id;
-              return (
-                <button
-                  key={l.id}
-                  onClick={() => setSelectedId(l.id)}
-                  className={axisButton(active)}
-                >
-                  {l.title}
-                </button>
-              );
-            })}
+            {matches.map((l) => (
+              <ToggleButton
+                key={l.id}
+                active={selected?.id === l.id}
+                onClick={() => setSelectedId(l.id)}
+              >
+                {l.title}
+              </ToggleButton>
+            ))}
           </div>
         )}
-      </div>
+      </FieldGroup>
 
       {/* Selected lick: meta + player */}
       {selected && (

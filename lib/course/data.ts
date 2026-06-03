@@ -48,6 +48,14 @@ export interface Lesson {
   curriculumItemIds: string[];
   /** Built tools that practice this lesson's topic. */
   tools: CurriculumTool[];
+  /**
+   * Optional deep-link query string per tool (e.g. "?root=C&scale=major"), so a
+   * lesson pre-selects a representative subject in the tool. Keyed by the bare
+   * route in `tools`; a tool with no entry opens at its own defaults. The route
+   * itself stays in `tools` (validated by the data test); params are appended at
+   * render time in LessonView. Each value MUST start with "?".
+   */
+  toolParams?: Partial<Record<CurriculumTool, string>>;
   /** Original multiple-choice quiz (>= 3 questions). */
   quiz: Question[];
 }
@@ -77,6 +85,10 @@ export const LESSONS: Lesson[] = [
       "theory-intervals",
     ],
     tools: ["/fretboard", "/caged"],
+    toolParams: {
+      "/fretboard": "?root=C&scale=major",
+      "/caged": "?root=C&quality=major",
+    },
     quiz: [
       {
         id: "scale-q1",
@@ -145,6 +157,7 @@ export const LESSONS: Lesson[] = [
     ],
     curriculumItemIds: ["theory-caged-system", "theory-5-pattern"],
     tools: ["/caged"],
+    toolParams: { "/caged": "?root=C&quality=major" },
     quiz: [
       {
         id: "caged-q1",
@@ -209,6 +222,7 @@ export const LESSONS: Lesson[] = [
       "chord-min7",
     ],
     tools: ["/chords"],
+    toolParams: { "/chords": "?root=C&type=maj7" },
     quiz: [
       {
         id: "chord-q1",
@@ -272,6 +286,10 @@ export const LESSONS: Lesson[] = [
     ],
     curriculumItemIds: ["chord-diatonic-concept", "theory-secondary-dominant"],
     tools: ["/chords", "/harmony"],
+    toolParams: {
+      "/chords": "?root=C",
+      "/harmony": "?concept=secondary-dominant&key=C",
+    },
     quiz: [
       {
         id: "diatonic-q1",
@@ -389,6 +407,23 @@ export const LESSONS: Lesson[] = [
 /** Look up a lesson by slug; undefined if not found. */
 export function getLesson(slug: string): Lesson | undefined {
   return LESSONS.find((l) => l.slug === slug);
+}
+
+// Reverse of the lesson → curriculumItemIds mapping: which lesson (if any)
+// teaches a given curriculum item. Lets the curriculum map link a 規劃中 item
+// (no built tool) to its course lesson instead of showing a dead badge. Built
+// once at module load. If two lessons ever claim the same item, the first in
+// LESSONS order wins (the data test guards that each id is otherwise valid).
+const LESSON_SLUG_BY_ITEM = new Map<string, string>();
+for (const lesson of LESSONS) {
+  for (const id of lesson.curriculumItemIds) {
+    if (!LESSON_SLUG_BY_ITEM.has(id)) LESSON_SLUG_BY_ITEM.set(id, lesson.slug);
+  }
+}
+
+/** The slug of the lesson that teaches `itemId`, or undefined if none does. */
+export function lessonSlugForItem(itemId: string): string | undefined {
+  return LESSON_SLUG_BY_ITEM.get(itemId);
 }
 
 /** Lessons sorted by their display order. */

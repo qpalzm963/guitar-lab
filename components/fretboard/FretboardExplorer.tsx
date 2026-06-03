@@ -7,6 +7,14 @@ import { scalePositions } from "@/lib/theory/positions";
 import { downloadSvgAsPng } from "@/lib/export/svgToPng";
 import { ROOT_OPTIONS } from "@/lib/theory/notes";
 import { useSettings, type LabelMode } from "@/lib/store/settings";
+import { Button } from "@/components/ui/Button";
+import { ToggleButton } from "@/components/ui/ToggleButton";
+import { Field, FieldGroup, Select } from "@/components/ui/Field";
+import { ScrollableBoard } from "@/components/ui/ScrollableBoard";
+import {
+  useInitialParams,
+  pickAllowed,
+} from "@/lib/url/useInitialParams";
 
 const SCALES: { id: string; label: string }[] = [
   { id: "major", label: "大調 Major" },
@@ -56,6 +64,24 @@ export function FretboardExplorer() {
     useSettings.persist.rehydrate();
   }, []);
 
+  // Deep-link seeding (client only, after mount — no hydration mismatch). A
+  // lesson/curriculum link like /fretboard?root=Eb&scale=major pre-selects the
+  // subject. Params are validated against the real option ids; invalid/missing
+  // params are ignored so the current/persisted state stands. Runs after the
+  // rehydrate effect above, so a deep-link wins over the persisted root/scale.
+  const params = useInitialParams();
+  useEffect(() => {
+    if (!params) return;
+    const root = pickAllowed(params, "root", ROOT_OPTIONS);
+    if (root) setRoot(root);
+    const scale = pickAllowed(
+      params,
+      "scale",
+      SCALES.map((s) => s.id),
+    );
+    if (scale) setScale(scale);
+  }, [params, setRoot, setScale]);
+
   const allMarkers = useMemo(
     () => scaleMarkers(root, scaleName),
     [root, scaleName],
@@ -90,49 +116,39 @@ export function FretboardExplorer() {
     }
   }
 
-  const pill =
-    "rounded-md px-3 py-1.5 text-sm border transition-colors cursor-pointer";
-
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-end gap-6">
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-gray-500">根音 Root</span>
-          <select
-            value={root}
-            onChange={(e) => setRoot(e.target.value)}
-            className="rounded-md border border-gray-300 px-3 py-1.5"
-          >
+        <Field label="根音 Root">
+          <Select value={root} onChange={(e) => setRoot(e.target.value)}>
             {ROOT_OPTIONS.map((n) => (
               <option key={n} value={n}>
                 {n}
               </option>
             ))}
-          </select>
-        </label>
+          </Select>
+        </Field>
 
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-gray-500">音階 Scale</span>
-          <select
+        <Field label="音階 Scale">
+          <Select
             value={scaleName}
             onChange={(e) => setScale(e.target.value)}
-            className="rounded-md border border-gray-300 px-3 py-1.5 min-w-56"
+            className="min-w-56"
           >
             {SCALES.map((s) => (
               <option key={s.id} value={s.id}>
                 {s.label}
               </option>
             ))}
-          </select>
-        </label>
+          </Select>
+        </Field>
 
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-gray-500">把位 Position</span>
-          <select
+        <Field label="把位 Position">
+          <Select
             value={posIndex}
             onChange={(e) => setPosIndex(Number(e.target.value))}
             disabled={positions.length === 0}
-            className="rounded-md border border-gray-300 px-3 py-1.5 disabled:opacity-50"
+            className="disabled:opacity-50"
           >
             <option value={-1}>全部</option>
             {positions.map((p) => (
@@ -140,35 +156,26 @@ export function FretboardExplorer() {
                 {p.label}(第 {p.from}-{p.to} 格)
               </option>
             ))}
-          </select>
-        </label>
+          </Select>
+        </Field>
 
-        <div className="flex flex-col gap-1 text-sm">
-          <span className="text-gray-500">標籤 Label</span>
+        <FieldGroup label="標籤 Label">
           <div className="flex gap-1">
             {LABELS.map((l) => (
-              <button
+              <ToggleButton
                 key={l.id}
+                active={labels === l.id}
                 onClick={() => setLabels(l.id)}
-                className={`${pill} ${
-                  labels === l.id
-                    ? "border-rose-600 bg-rose-600 text-white"
-                    : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-                }`}
               >
                 {l.label}
-              </button>
+              </ToggleButton>
             ))}
           </div>
-        </div>
+        </FieldGroup>
 
-        <button
-          onClick={exportPng}
-          disabled={busy}
-          className={`${pill} border-gray-800 bg-gray-900 text-white hover:bg-gray-700 disabled:opacity-50`}
-        >
+        <Button variant="secondary" onClick={exportPng} disabled={busy}>
           {busy ? "匯出中…" : "匯出 PNG"}
-        </button>
+        </Button>
       </div>
 
       <div className="flex items-center gap-4 text-xs text-gray-500">
@@ -180,17 +187,14 @@ export function FretboardExplorer() {
         </span>
       </div>
 
-      <div
-        ref={boardRef}
-        className="overflow-x-auto rounded-lg border border-gray-200 bg-white p-4"
-      >
+      <ScrollableBoard ref={boardRef}>
         <Fretboard
           markers={markers}
           labelMode={labels}
           toFret={15}
           positionHighlight={active ? { from: active.from, to: active.to } : null}
         />
-      </div>
+      </ScrollableBoard>
     </div>
   );
 }

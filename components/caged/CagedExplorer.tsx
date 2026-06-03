@@ -6,6 +6,11 @@ import { cagedShapes, type CagedQuality } from "@/lib/theory/caged";
 import { downloadSvgAsPng } from "@/lib/export/svgToPng";
 import { ROOT_OPTIONS } from "@/lib/theory/notes";
 import type { LabelMode } from "@/lib/store/settings";
+import { Button } from "@/components/ui/Button";
+import { ToggleButton } from "@/components/ui/ToggleButton";
+import { Field, FieldGroup, Select } from "@/components/ui/Field";
+import { ScrollableBoard } from "@/components/ui/ScrollableBoard";
+import { useInitialParams, pickAllowed } from "@/lib/url/useInitialParams";
 
 // CAGED is a major/minor system; local state only (no persisted store — that's
 // the scale tool's, and must not be modified). Mirrors ChordExplorer's controls.
@@ -22,11 +27,33 @@ const LABELS: { id: LabelMode; label: string }[] = [
 export function CagedExplorer() {
   const [root, setRoot] = useState("C");
   const [quality, setQuality] = useState<CagedQuality>("major");
-  const [labels, setLabels] = useState<LabelMode>("degree");
+  // Default to 音名 (name) for consistency with the other explorers.
+  const [labels, setLabels] = useState<LabelMode>("name");
   // Index into the 5 shapes (ascending up the neck), 0 = lowest.
   const [shapeIdx, setShapeIdx] = useState(0);
   const [busy, setBusy] = useState(false);
   const boardRef = useRef<HTMLDivElement>(null);
+
+  // Deep-link seeding (client only, after mount). e.g. /caged?root=C&quality=major.
+  // Validated against ROOT_OPTIONS / QUALITIES ids; invalid/missing ignored.
+  // Applied via the repo's "adjust state during render when an input changes"
+  // pattern (mirrors prevShapeKey below), not a setState-in-effect: params is
+  // null until hydration, so this fires once when it first becomes non-null.
+  const params = useInitialParams();
+  const [seededFrom, setSeededFrom] = useState<Record<string, string> | null>(
+    null,
+  );
+  if (params && params !== seededFrom) {
+    setSeededFrom(params);
+    const r = pickAllowed(params, "root", ROOT_OPTIONS);
+    if (r) setRoot(r);
+    const q = pickAllowed(
+      params,
+      "quality",
+      QUALITIES.map((x) => x.id),
+    );
+    if (q) setQuality(q as CagedQuality);
+  }
 
   const shapes = useMemo(
     () => cagedShapes(root, quality),
@@ -58,89 +85,71 @@ export function CagedExplorer() {
     }
   }
 
-  const pill =
-    "rounded-md px-3 py-1.5 text-sm border transition-colors cursor-pointer";
-
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-end gap-6">
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-gray-500">根音 Root</span>
-          <select
-            value={root}
-            onChange={(e) => setRoot(e.target.value)}
-            className="rounded-md border border-gray-300 px-3 py-1.5"
-          >
+        <Field label="根音 Root">
+          <Select value={root} onChange={(e) => setRoot(e.target.value)}>
             {ROOT_OPTIONS.map((n) => (
               <option key={n} value={n}>
                 {n}
               </option>
             ))}
-          </select>
-        </label>
+          </Select>
+        </Field>
 
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-gray-500">和弦 Quality</span>
-          <select
+        <Field label="和弦 Quality">
+          <Select
             value={quality}
             onChange={(e) => setQuality(e.target.value as CagedQuality)}
-            className="rounded-md border border-gray-300 px-3 py-1.5 min-w-44"
+            className="min-w-44"
           >
             {QUALITIES.map((q) => (
               <option key={q.id} value={q.id}>
                 {q.label}
               </option>
             ))}
-          </select>
-        </label>
+          </Select>
+        </Field>
 
-        <div className="flex flex-col gap-1 text-sm">
-          <span className="text-gray-500">標籤 Label</span>
+        <FieldGroup label="標籤 Label">
           <div className="flex gap-1">
             {LABELS.map((l) => (
-              <button
+              <ToggleButton
                 key={l.id}
+                active={labels === l.id}
                 onClick={() => setLabels(l.id)}
-                className={`${pill} ${
-                  labels === l.id
-                    ? "border-rose-600 bg-rose-600 text-white"
-                    : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-                }`}
               >
                 {l.label}
-              </button>
+              </ToggleButton>
             ))}
           </div>
-        </div>
+        </FieldGroup>
 
-        <button
+        <Button
+          variant="secondary"
           onClick={exportPng}
           disabled={busy || !current}
-          className={`${pill} border-gray-800 bg-gray-900 text-white hover:bg-gray-700 disabled:opacity-50`}
         >
           {busy ? "匯出中…" : "匯出 PNG"}
-        </button>
+        </Button>
       </div>
 
       {/* Shape stepper: C → A → G → E → D, ordered up the neck. */}
-      <div className="flex flex-col gap-1 text-sm">
-        <span className="text-gray-500">把位 Shape(沿指板由低到高)</span>
+      <FieldGroup label="把位 Shape(沿指板由低到高)">
         <div className="flex flex-wrap gap-1">
           {shapes.map((s, i) => (
-            <button
+            <ToggleButton
               key={s.shape}
+              active={i === shapeIdx}
               onClick={() => setShapeIdx(i)}
-              className={`${pill} font-mono ${
-                i === shapeIdx
-                  ? "border-rose-600 bg-rose-600 text-white"
-                  : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-              }`}
+              className="font-mono"
             >
               {s.shape} 型
-            </button>
+            </ToggleButton>
           ))}
         </div>
-      </div>
+      </FieldGroup>
 
       <div className="flex items-center gap-4 text-xs text-gray-500">
         <span className="flex items-center gap-1.5">
@@ -157,10 +166,7 @@ export function CagedExplorer() {
         )}
       </div>
 
-      <div
-        ref={boardRef}
-        className="overflow-x-auto rounded-lg border border-gray-200 bg-white p-4"
-      >
+      <ScrollableBoard ref={boardRef}>
         <Fretboard
           markers={current?.markers ?? []}
           labelMode={labels}
@@ -169,7 +175,7 @@ export function CagedExplorer() {
             current ? { from: current.from, to: current.to } : null
           }
         />
-      </div>
+      </ScrollableBoard>
     </div>
   );
 }

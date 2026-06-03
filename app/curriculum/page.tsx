@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { CurriculumMap } from "@/components/curriculum/CurriculumMap";
+import { PageShell } from "@/components/ui/PageShell";
 
 export const metadata: Metadata = {
   title: "課程地圖 · guitar-lab",
@@ -8,12 +9,13 @@ export const metadata: Metadata = {
 
 export default function CurriculumPage() {
   return (
-    <main className="mx-auto max-w-6xl p-6">
-      <h1 className="mb-1 text-2xl font-bold">課程地圖</h1>
-      <p className="mb-6 text-sm text-gray-500">
-        六大領域的學習路徑;勾選「已學」記錄進度(存在本機),有對應工具的項目可直接開啟,其餘標示「規劃中」。
-      </p>
+    <PageShell
+      eyebrow="開始學習"
+      title="課程地圖"
+      width="wide"
+      subtitle="六大領域的學習路徑;勾選「已學」記錄進度(存在本機),有對應工具的項目可直接開啟,其餘標示「規劃中」。"
+    >
       <CurriculumMap />
-    </main>
+    </PageShell>
   );
 }

@@ -91,6 +91,21 @@ describe("course data integrity", () => {
       }
     }
   });
+
+  it("every toolParams key is one of the lesson's tools and its value is a query string", () => {
+    // toolParams supplies deep-link query strings appended to tool links in
+    // LessonView. A key that isn't in `tools` would never render (dead config);
+    // a value not starting with "?" would corrupt the href. This guards both so
+    // the lesson → tool deep-links actually fire.
+    for (const l of LESSONS) {
+      if (!l.toolParams) continue;
+      const toolSet = new Set(l.tools);
+      for (const [route, query] of Object.entries(l.toolParams)) {
+        expect(toolSet.has(route as (typeof l.tools)[number])).toBe(true);
+        expect(query.startsWith("?")).toBe(true);
+      }
+    }
+  });
 });
 
 describe("course quizzes", () => {

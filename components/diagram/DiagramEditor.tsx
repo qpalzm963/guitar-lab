@@ -8,6 +8,9 @@ import { pitchClassAt, STANDARD_TUNING } from "@/lib/theory/fretboard";
 import { ROOT_OPTIONS } from "@/lib/theory/notes";
 import { useDiagrams, type SavedDiagram } from "@/lib/store/diagrams";
 import type { Marker, NoteRole } from "@/lib/theory/types";
+import { Button } from "@/components/ui/Button";
+import { ToggleButton } from "@/components/ui/ToggleButton";
+import { Field, FieldGroup, Select } from "@/components/ui/Field";
 
 const TO_FRET = 15;
 
@@ -145,134 +148,105 @@ export function DiagramEditor({ initial, onSaved }: DiagramEditorProps) {
     onSaved?.(diagram);
   }
 
-  const pill =
-    "rounded-md px-3 py-1.5 text-sm border transition-colors cursor-pointer";
-
   return (
     <div className="space-y-5 diagram-editor">
       {/* controls — hidden when printing */}
       <div className="no-print space-y-4">
         <div className="flex flex-wrap items-end gap-6">
-          <div className="flex flex-col gap-1 text-sm">
-            <span className="text-gray-500">角色 Role(點空格新增,點圓點移除)</span>
+          <FieldGroup label="角色 Role(點空格新增,點圓點移除)">
             <div className="flex gap-1">
               {ROLES.map((r) => (
-                <button
+                <ToggleButton
                   key={r.id}
+                  active={activeRole === r.id}
                   onClick={() => setActiveRole(r.id)}
-                  className={`${pill} flex items-center gap-1.5 ${
-                    activeRole === r.id
-                      ? "border-rose-600 bg-rose-600 text-white"
-                      : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-                  }`}
+                  className="flex items-center gap-1.5"
                 >
                   <span
                     className="inline-block h-3 w-3 rounded-full"
                     style={{ backgroundColor: r.color }}
                   />
                   {r.label}
-                </button>
+                </ToggleButton>
               ))}
             </div>
-          </div>
+          </FieldGroup>
 
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="text-gray-500">標籤文字 Label(可留空)</span>
+          <Field label="標籤文字 Label(可留空)">
             <input
               value={label}
               onChange={(e) => setLabel(e.target.value)}
               placeholder="例如 1、3、R"
               className="rounded-md border border-gray-300 px-3 py-1.5 w-40"
             />
-          </label>
+          </Field>
         </div>
 
         <div className="flex flex-wrap items-end gap-6">
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="text-gray-500">圖表標題 Title(印在圖上方)</span>
+          <Field label="圖表標題 Title(印在圖上方)">
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="例如 C 大調第一把位"
               className="rounded-md border border-gray-300 px-3 py-1.5 w-72"
             />
-          </label>
+          </Field>
 
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="text-gray-500">名稱 Name(儲存到圖庫用)</span>
+          <Field label="名稱 Name(儲存到圖庫用)">
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="例如 小明-作業1"
               className="rounded-md border border-gray-300 px-3 py-1.5 w-56"
             />
-          </label>
+          </Field>
         </div>
 
         {/* 從音階載入 convenience seed */}
         <div className="flex flex-wrap items-end gap-4">
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="text-gray-500">從音階載入 Root</span>
-            <select
+          <Field label="從音階載入 Root">
+            <Select
               value={seedRoot}
               onChange={(e) => setSeedRoot(e.target.value)}
-              className="rounded-md border border-gray-300 px-3 py-1.5"
             >
               {ROOT_OPTIONS.map((n) => (
                 <option key={n} value={n}>
                   {n}
                 </option>
               ))}
-            </select>
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="text-gray-500">Scale</span>
-            <select
+            </Select>
+          </Field>
+          <Field label="Scale">
+            <Select
               value={seedScale}
               onChange={(e) => setSeedScale(e.target.value)}
-              className="rounded-md border border-gray-300 px-3 py-1.5 min-w-48"
+              className="min-w-48"
             >
               {SEED_SCALES.map((s) => (
                 <option key={s.id} value={s.id}>
                   {s.label}
                 </option>
               ))}
-            </select>
-          </label>
-          <button
-            onClick={seedFromScale}
-            className={`${pill} border-gray-300 bg-white text-gray-700 hover:bg-gray-50`}
-          >
+            </Select>
+          </Field>
+          <Button variant="ghost" onClick={seedFromScale}>
             從音階載入
-          </button>
+          </Button>
         </div>
 
         <div className="flex flex-wrap gap-3">
-          <button
-            onClick={clear}
-            className={`${pill} border-gray-300 bg-white text-gray-700 hover:bg-gray-50`}
-          >
+          <Button variant="ghost" onClick={clear}>
             清空
-          </button>
-          <button
-            onClick={exportPng}
-            disabled={busy}
-            className={`${pill} border-gray-800 bg-gray-900 text-white hover:bg-gray-700 disabled:opacity-50`}
-          >
+          </Button>
+          <Button variant="secondary" onClick={exportPng} disabled={busy}>
             {busy ? "匯出中…" : "匯出 PNG"}
-          </button>
-          <button
-            onClick={() => window.print()}
-            className={`${pill} border-gray-800 bg-gray-900 text-white hover:bg-gray-700`}
-          >
+          </Button>
+          <Button variant="secondary" onClick={() => window.print()}>
             列印
-          </button>
-          <button
-            onClick={save}
-            className={`${pill} border-rose-600 bg-rose-600 text-white hover:bg-rose-700`}
-          >
+          </Button>
+          <Button variant="primary" onClick={save}>
             {initial ? "更新" : "儲存"}
-          </button>
+          </Button>
         </div>
       </div>
 
