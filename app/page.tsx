@@ -37,6 +37,12 @@ export default function Home() {
           開啟音程練習 →
         </Link>
         <Link
+          href="/practice"
+          className="inline-block rounded-md bg-rose-600 px-4 py-2 font-medium text-white hover:bg-rose-700"
+        >
+          開啟練習工具 →
+        </Link>
+        <Link
           href="/diagrams"
           className="inline-block rounded-md bg-rose-600 px-4 py-2 font-medium text-white hover:bg-rose-700"
         >

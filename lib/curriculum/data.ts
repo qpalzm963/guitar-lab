@@ -27,6 +27,7 @@ export type CurriculumTool =
   | "/chords"
   | "/caged"
   | "/intervals"
+  | "/practice"
   | "/spike/alphatab";
 
 export interface CurriculumItem {
@@ -109,10 +110,10 @@ export const CURRICULUM: CurriculumAreaGroup[] = [
       { id: "rhythm-on-off-beat", area: "節奏訓練", title: "正拍反拍", category: "C" },
       { id: "rhythm-8th-16th", area: "節奏訓練", title: "八分/十六分音符", category: "C" },
       { id: "rhythm-rests", area: "節奏訓練", title: "休止符練習", category: "C" },
-      { id: "rhythm-triplets", area: "節奏訓練", title: "三連音/六連音", category: "C" },
+      { id: "rhythm-triplets", area: "節奏訓練", title: "三連音/六連音", category: "A", tool: "/practice" },
       { id: "rhythm-16th-syncopation", area: "節奏訓練", title: "十六分切分音訓練", category: "C" },
-      { id: "rhythm-accent-2-4", area: "節奏訓練", title: "重音2&4拍練習", category: "C" },
-      { id: "rhythm-metronome-1", area: "節奏訓練", title: "節拍器1拍練習", category: "C" },
+      { id: "rhythm-accent-2-4", area: "節奏訓練", title: "重音2&4拍練習", category: "A", tool: "/practice" },
+      { id: "rhythm-metronome-1", area: "節奏訓練", title: "節拍器1拍練習", category: "A", tool: "/practice" },
       { id: "rhythm-mega", area: "節奏訓練", title: "Mega訓練", category: "C" },
       { id: "rhythm-missing-beats", area: "節奏訓練", title: "Missing the beats練習", category: "C" },
       { id: "rhythm-find-chords-key", area: "節奏訓練", title: "如何抓和弦/調子", category: "C" },

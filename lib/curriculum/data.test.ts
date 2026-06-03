@@ -9,6 +9,7 @@ const REAL_ROUTES = new Set([
   "/chords",
   "/caged",
   "/intervals",
+  "/practice",
   "/spike/alphatab",
 ]);
 
