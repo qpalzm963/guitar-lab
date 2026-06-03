@@ -24,6 +24,12 @@ export default function Home() {
         >
           開啟 CAGED 系統 →
         </Link>
+        <Link
+          href="/diagrams"
+          className="inline-block rounded-md bg-rose-600 px-4 py-2 font-medium text-white hover:bg-rose-700"
+        >
+          開啟圖表編輯器 →
+        </Link>
       </div>
     </main>
   );

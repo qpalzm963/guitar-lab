@@ -18,6 +18,13 @@ export interface FretboardProps {
   toFret?: number;
   labelMode?: LabelMode;
   positionHighlight?: { from: number; to: number } | null;
+  /**
+   * Optional click handler enabling edit mode. When provided, a transparent
+   * click target is drawn over every (string, fret) cell — including empty and
+   * open-string (fret 0) cells — so callers can add/remove markers anywhere.
+   * Omitted by default, so existing read-only usages are unaffected.
+   */
+  onCellClick?: (string: number, fret: number) => void;
 }
 
 // Dumb SVG renderer. Receives a marker list; never computes theory.
@@ -28,6 +35,7 @@ export function Fretboard({
   toFret = 15,
   labelMode = "name",
   positionHighlight = null,
+  onCellClick,
 }: FretboardProps) {
   const strings = tuning.length;
   const padL = 56;
@@ -138,12 +146,15 @@ export function Fretboard({
         .map((m, idx) => {
           const cx = m.fret === 0 ? xOpen : xFretCenter(m.fret);
           const cy = yString(m.string);
+          // A freeform label (e.g. a finger number set in the diagram editor)
+          // overrides the labelMode spelling, per Marker.label's contract.
           const text =
-            labelMode === "name"
+            m.label ??
+            (labelMode === "name"
               ? m.pitchClass
               : labelMode === "degree"
                 ? (m.degree ?? "")
-                : "";
+                : "");
           return (
             <g key={`m${idx}`}>
               <circle cx={cx} cy={cy} r={13} fill={ROLE_FILL[m.role]} stroke="#ffffff" strokeWidth={1.5} />
@@ -163,6 +174,31 @@ export function Fretboard({
             </g>
           );
         })}
+
+      {/* edit-mode click targets: transparent cells over EVERY (string, fret),
+          including empty and open-string (fret 0) cells. Drawn last so they sit
+          above markers — clicking an existing marker removes it. Only rendered
+          when onCellClick is supplied, so read-only usages are untouched. */}
+      {onCellClick &&
+        tuning.map((_, stringIdx) =>
+          Array.from({ length: toFret + 1 }, (_, fret) => {
+            const cellX =
+              fret === 0 ? xOpen - stringGap / 2 : xFretLine(fret - 1);
+            const cellW = fret === 0 ? stringGap : fretW;
+            return (
+              <rect
+                key={`c${stringIdx}-${fret}`}
+                x={cellX}
+                y={yString(stringIdx) - stringGap / 2}
+                width={cellW}
+                height={stringGap}
+                fill="transparent"
+                style={{ cursor: "pointer" }}
+                onClick={() => onCellClick(stringIdx, fret)}
+              />
+            );
+          }),
+        )}
     </svg>
   );
 }
