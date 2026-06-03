@@ -1,16 +1,11 @@
-// The course (Phase 6): the teacher's five source PDFs turned into structured,
-// navigable lessons. Each lesson links its source PDF (served locally from
-// public/materials — see note below), an outline of chapters we derived from the
-// material's topics, the curriculum items it covers (so the course and the
-// 6-area map stay in sync), the built tools that practice the topic, and an
-// ORIGINAL multiple-choice quiz.
+// The course (Phase 6): five structured, navigable lessons. Each lesson carries
+// an ORIGINAL written explanation (in lessonContent.ts), an outline of chapters,
+// the curriculum items it covers (so the course and the 6-area map stay in sync),
+// the built tools that practice the topic, and an ORIGINAL multiple-choice quiz.
 //
-// Copyright / privacy: the PDFs themselves are the teacher's copyrighted work and
-// are gitignored (public/materials/*.pdf) so they are NEVER published on the
-// PUBLIC GitHub Pages site. The viewer loads them locally; on the deployed site
-// the file is absent and the lesson page shows a placeholder while chapters, tool
-// links and the quiz still work. The chapter outlines and quiz questions below
-// are authored from scratch (general music theory), NOT copied from the PDFs.
+// The app ships and loads NO PDFs: lessons render the original written content
+// only. The chapter outlines and quiz questions below are authored from scratch
+// (general music theory), not copied from any source.
 //
 // Quiz answers were sanity-checked against tonal (e.g. Cmaj7 = C E G B; ii–V in C
 // = Dm7–G7; C major = C D E F G A B). The data test re-verifies a few with tonal.
@@ -38,8 +33,6 @@ export interface Lesson {
   title: string;
   /** zh-TW one-line summary shown in the list and detail header. */
   summary: string;
-  /** PDF filename under public/materials (basePath-prefixed at render time). */
-  pdf: string;
   /** 1-based display order in the course list. */
   order: number;
   /** Section outline we derived from the material's topics (zh-TW). */
@@ -65,7 +58,6 @@ export const LESSONS: Lesson[] = [
     slug: "scale",
     title: "音階 Guitar Scale",
     summary: "音程與級數的基礎,以及大調、小調、五聲與藍調音階的結構。",
-    pdf: "scale.pdf",
     order: 1,
     chapters: [
       "音程與級數:認識度數與半音/全音",
@@ -151,7 +143,6 @@ export const LESSONS: Lesson[] = [
     slug: "caged",
     title: "CAGED 系統",
     summary: "用 C-A-G-E-D 五個開放和弦把位串連整個指板。",
-    pdf: "caged.pdf",
     order: 2,
     chapters: [
       "CAGED 五個把位的由來",
@@ -208,7 +199,6 @@ export const LESSONS: Lesson[] = [
     slug: "chord-system",
     title: "和弦系統 Chord System",
     summary: "三和弦與七和弦如何由音程堆疊而成。",
-    pdf: "chord-system.pdf",
     order: 3,
     chapters: [
       "和弦的堆疊原理:三度疊置",
@@ -280,7 +270,6 @@ export const LESSONS: Lesson[] = [
     slug: "diatonic",
     title: "順階和弦 Diatonic Chord",
     summary: "從大調音階產生的順階和弦,以及級數與和聲進行。",
-    pdf: "diatonic.pdf",
     order: 4,
     chapters: [
       "順階和弦的產生:在音階每個音上疊三度",
@@ -345,7 +334,6 @@ export const LESSONS: Lesson[] = [
     slug: "basics",
     title: "基本功練習",
     summary: "暖指、交替撥弦與一弦三音等左右手基礎練習。",
-    pdf: "basics.pdf",
     order: 5,
     chapters: [
       "暖指與蜘蛛爬(spider)練習",

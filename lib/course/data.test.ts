@@ -17,16 +17,6 @@ const REAL_ROUTES = new Set([
   "/spike/alphatab",
 ]);
 
-// The five PDF slugs the lessons reference; these are the files copied into
-// public/materials. The viewer prefixes NEXT_PUBLIC_BASE_PATH at render time.
-const EXPECTED_PDFS = new Set([
-  "scale.pdf",
-  "caged.pdf",
-  "chord-system.pdf",
-  "diatonic.pdf",
-  "basics.pdf",
-]);
-
 const CURRICULUM_IDS = new Set(ALL_ITEMS.map((i) => i.id));
 
 describe("course data integrity", () => {
@@ -63,12 +53,6 @@ describe("course data integrity", () => {
       expect(l.summary.length).toBeGreaterThan(0);
       expect(l.chapters.length).toBeGreaterThan(0);
       expect(l.chapters.every((c) => c.length > 0)).toBe(true);
-    }
-  });
-
-  it("every lesson pdf is one of the five expected slug filenames", () => {
-    for (const l of LESSONS) {
-      expect(EXPECTED_PDFS.has(l.pdf)).toBe(true);
     }
   });
 
