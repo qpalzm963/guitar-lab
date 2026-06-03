@@ -5,7 +5,7 @@ import { PageShell } from "@/components/ui/PageShell";
 export const metadata: Metadata = {
   title: "課程 · guitar-lab",
   description:
-    "依老師教材整理的五堂課:音階、CAGED、和弦系統、順階和弦、基本功;每課含教材、章節大綱、相關工具與小測驗,並記錄完成進度。",
+    "五堂吉他課:音階、CAGED、和弦系統、順階和弦、基本功;每課含原創課程講解、相關工具與小測驗,並記錄學習進度。",
 };
 
 // Server shell (same pattern as /intervals and /harmony): static metadata + a
@@ -16,7 +16,7 @@ export default function CoursePage() {
       eyebrow="開始學習"
       title="課程"
       width="reading"
-      subtitle="依老師教材整理的五堂課。每課提供教材 PDF、章節大綱、可直接開啟的練習工具,以及一個小測驗;完成狀態與測驗成績存在本機。"
+      subtitle="五堂課,每課含原創課程講解(目標、概念、常見錯誤、練習步驟)、可直接開啟的練習工具,以及一個小測驗;完成狀態與測驗成績都存在你的瀏覽器本機。"
     >
       <CourseList />
     </PageShell>

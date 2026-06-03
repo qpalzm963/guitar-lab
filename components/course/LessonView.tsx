@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
 import type { Lesson } from "@/lib/course/data";
 import type { CurriculumTool } from "@/lib/curriculum/data";
 import { ALL_ITEMS } from "@/lib/curriculum/data";
+import { LESSON_CONTENT } from "@/lib/course/lessonContent";
 import { useCourse } from "@/lib/store/course";
 import { Quiz } from "./Quiz";
 
@@ -22,70 +23,12 @@ const TOOL_LABEL: Record<CurriculumTool, string> = {
   "/spike/alphatab": "alphaTab 譜例",
 };
 
-// The Pages basePath at runtime ("/guitar-lab" on Pages, "" in dev). Same source
-// as lib/alphatab/assets.ts — the PDF lives under /public so its URL must carry
-// the subpath prefix or it 404s on the deployed site.
-const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
-
 // Title lookup for the linked curriculum items, so the cross-reference shows the
 // human title rather than the slug id.
 const ITEM_TITLE = new Map(ALL_ITEMS.map((i) => [i.id, i.title]));
 
-function PdfViewer({ pdf, title }: { pdf: string; title: string }) {
-  // The teacher's PDFs are gitignored and NOT published, so on the deployed
-  // (public) site the file is absent and the <iframe> would show a 404. We can't
-  // reliably detect a cross-origin 404 inside an iframe, so we probe the URL with
-  // a HEAD request first and only mount the iframe when the file is reachable;
-  // otherwise we show a zh-TW placeholder. In local dev the file is present and
-  // the probe succeeds. Probe runs client-side only (effect), so SSR is unaffected.
-  const src = `${BASE_PATH}/materials/${pdf}`;
-  const [status, setStatus] = useState<"checking" | "ok" | "missing">(
-    "checking",
-  );
-
-  useEffect(() => {
-    let cancelled = false;
-    fetch(src, { method: "HEAD" })
-      .then((res) => {
-        if (!cancelled) setStatus(res.ok ? "ok" : "missing");
-      })
-      .catch(() => {
-        if (!cancelled) setStatus("missing");
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [src]);
-
-  if (status === "missing") {
-    return (
-      <div className="flex min-h-64 flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-gray-300 bg-gray-50 p-8 text-center">
-        <p className="text-sm font-medium text-gray-600">
-          教材 PDF 由老師本機提供(未公開)
-        </p>
-        <p className="text-xs text-gray-400">
-          線上版不含老師的版權教材;下方的章節大綱、相關工具與小測驗皆可正常使用。
-        </p>
-      </div>
-    );
-  }
-
-  if (status === "checking") {
-    return (
-      <div className="flex min-h-64 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 p-8">
-        <p className="text-sm text-gray-400">載入教材中…</p>
-      </div>
-    );
-  }
-
-  return (
-    <iframe
-      src={src}
-      title={`${title} 教材 PDF`}
-      className="h-[70vh] w-full rounded-lg border border-gray-200"
-    />
-  );
-}
+const toolLinkCls =
+  "inline-block rounded-md border border-rose-200 px-3 py-1.5 text-sm text-rose-700 transition-colors hover:bg-rose-50";
 
 export function LessonView({ lesson }: { lesson: Lesson }) {
   // Store uses skipHydration; pull persisted progress on the client only — same
@@ -98,6 +41,10 @@ export function LessonView({ lesson }: { lesson: Lesson }) {
   const quiz = useCourse((s) => s.lessons[lesson.slug]?.quiz);
   const toggleDone = useCourse((s) => s.toggleDone);
 
+  // Original, copyright-safe written lesson (replaces the teacher's PDFs — the
+  // app ships none of them). See lib/course/lessonContent.ts.
+  const content = LESSON_CONTENT[lesson.slug];
+
   return (
     <div className="space-y-8">
       <Link
@@ -107,21 +54,63 @@ export function LessonView({ lesson }: { lesson: Lesson }) {
         ← 返回課程列表
       </Link>
 
-      {/* PDF viewer (graceful fallback when the file is absent). */}
-      <section>
-        <h2 className="mb-2 text-lg font-semibold">教材</h2>
-        <PdfViewer pdf={lesson.pdf} title={lesson.title} />
-      </section>
+      {content && (
+        <>
+          {/* Objectives. */}
+          <section>
+            <h2 className="mb-2 text-lg font-semibold">學習目標</h2>
+            <ul className="list-disc space-y-1 pl-6 text-sm text-gray-700">
+              {content.objectives.map((o) => (
+                <li key={o}>{o}</li>
+              ))}
+            </ul>
+          </section>
 
-      {/* Chapter outline. */}
-      <section>
-        <h2 className="mb-2 text-lg font-semibold">章節大綱</h2>
-        <ol className="list-decimal space-y-1 pl-6 text-sm text-gray-700">
-          {lesson.chapters.map((c) => (
-            <li key={c}>{c}</li>
+          {/* Lesson body — original written sections. */}
+          {content.sections.map((s) => (
+            <section key={s.heading} className="space-y-2">
+              <h2 className="text-lg font-semibold">{s.heading}</h2>
+              {s.paragraphs.map((p, i) => (
+                <p key={i} className="text-sm leading-relaxed text-gray-700">
+                  {p}
+                </p>
+              ))}
+              {s.bullets && s.bullets.length > 0 ? (
+                <ul className="list-disc space-y-1 pl-6 text-sm text-gray-700">
+                  {s.bullets.map((b) => (
+                    <li key={b}>{b}</li>
+                  ))}
+                </ul>
+              ) : null}
+              {s.tool ? (
+                <Link href={s.tool.href} className={toolLinkCls}>
+                  {s.tool.label} →
+                </Link>
+              ) : null}
+            </section>
           ))}
-        </ol>
-      </section>
+
+          {/* Common mistakes. */}
+          <section>
+            <h2 className="mb-2 text-lg font-semibold">常見錯誤</h2>
+            <ul className="list-disc space-y-1 pl-6 text-sm text-gray-700">
+              {content.commonMistakes.map((m) => (
+                <li key={m}>{m}</li>
+              ))}
+            </ul>
+          </section>
+
+          {/* Practice steps. */}
+          <section>
+            <h2 className="mb-2 text-lg font-semibold">練習步驟</h2>
+            <ol className="list-decimal space-y-1 pl-6 text-sm text-gray-700">
+              {content.practiceSteps.map((p) => (
+                <li key={p}>{p}</li>
+              ))}
+            </ol>
+          </section>
+        </>
+      )}
 
       {/* Linked curriculum items + tools. */}
       <section>
@@ -131,7 +120,7 @@ export function LessonView({ lesson }: { lesson: Lesson }) {
             <Link
               key={t}
               href={`${t}${lesson.toolParams?.[t] ?? ""}`}
-              className="rounded-md border border-rose-200 px-3 py-1.5 text-sm text-rose-700 transition-colors hover:bg-rose-50"
+              className={toolLinkCls}
             >
               開啟{TOOL_LABEL[t]} →
             </Link>
@@ -163,7 +152,7 @@ export function LessonView({ lesson }: { lesson: Lesson }) {
         <button
           type="button"
           onClick={() => toggleDone(lesson.slug)}
-          className={`rounded-md px-4 py-2 text-sm font-medium transition-colors cursor-pointer ${
+          className={`cursor-pointer rounded-md px-4 py-2 text-sm font-medium transition-colors ${
             done
               ? "border border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
               : "bg-rose-600 text-white hover:bg-rose-700"
