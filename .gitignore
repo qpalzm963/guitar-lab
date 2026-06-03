@@ -39,3 +39,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# teacher's copyrighted course PDFs — provided locally for the /course viewer,
+# must NEVER be committed/published (the repo + GitHub Pages are public). The
+# course UI degrades gracefully when these are absent on the deployed site.
+/public/materials/*.pdf

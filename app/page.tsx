@@ -7,6 +7,12 @@ export default function Home() {
       <p className="mt-2 text-gray-500">吉他教學工具(開發中 · P0/P1)</p>
       <div className="mt-6 flex flex-wrap gap-3">
         <Link
+          href="/course"
+          className="inline-block rounded-md bg-rose-600 px-4 py-2 font-medium text-white hover:bg-rose-700"
+        >
+          開始上課 →
+        </Link>
+        <Link
           href="/curriculum"
           className="inline-block rounded-md bg-rose-600 px-4 py-2 font-medium text-white hover:bg-rose-700"
         >
