@@ -5,6 +5,11 @@ import { useEffect, useRef, useState } from "react";
 // npm bundle never enters the Turbopack graph. The runtime code is loaded
 // separately from /public (see loadAlphaTab below).
 import type { AlphaTabApi } from "@coderline/alphatab";
+import {
+  ALPHATAB_FONT_DIR,
+  ALPHATAB_MODULE,
+  ALPHATAB_SOUNDFONT,
+} from "@/lib/alphatab/assets";
 
 // We deliberately do NOT `import('@coderline/alphatab')` for the runtime.
 // alphaTab launches its Web Worker + Audio Worklet via
@@ -24,12 +29,10 @@ import type { AlphaTabApi } from "@coderline/alphatab";
 // names, so the public/alphatab layout must mirror dist/ exactly. (Using the
 // .min entry would 404 on its non-min siblings.) These four .mjs files plus
 // font/ and soundfont/ are the complete runtime asset set.
-// Prefixed with the Pages basePath (empty in dev). import.meta.url inside the
-// loaded bundle then also points under /public, so its sibling worker/worklet/
-// soundfont lookups stay correct when served from the /guitar-lab subpath.
-const ALPHATAB_BASE = `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/alphatab`;
-const ALPHATAB_MODULE = `${ALPHATAB_BASE}/alphaTab.mjs`;
-
+// Asset URLs (entry mjs, font dir, soundfont) are basePath-prefixed in the
+// shared helper so they don't 404 on the /guitar-lab subpath. import.meta.url
+// inside the loaded bundle then also points under /public, so its sibling
+// worker/worklet/soundfont lookups stay correct when served from the subpath.
 type AlphaTabModule = typeof import("@coderline/alphatab");
 
 function loadAlphaTab(): Promise<AlphaTabModule> {
@@ -64,7 +67,7 @@ export function AlphaTabSpike() {
             // alphaTex passed directly via the `tex` option below.
             tex: true,
             // Plain static URLs under /public — no bundler resolution.
-            fontDirectory: `${ALPHATAB_BASE}/font/`,
+            fontDirectory: ALPHATAB_FONT_DIR,
             // Belt-and-suspenders: alphaTab auto-detects the worker from the
             // module URL, but if that path ever fails it falls back to
             // scriptFile. Point it at the public bundle so the fallback works.
@@ -74,7 +77,7 @@ export function AlphaTabSpike() {
             // PlayerMode.EnabledAutomatic. The JSON settings accept the enum
             // key as a string, so we avoid referencing the runtime enum object.
             playerMode: "EnabledAutomatic",
-            soundFont: `${ALPHATAB_BASE}/soundfont/sonivox.sf3`,
+            soundFont: ALPHATAB_SOUNDFONT,
             scrollElement: containerRef.current,
           },
           display: {

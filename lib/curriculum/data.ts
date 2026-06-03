@@ -27,7 +27,9 @@ export type CurriculumTool =
   | "/chords"
   | "/caged"
   | "/intervals"
+  | "/harmony"
   | "/practice"
+  | "/licks"
   | "/spike/alphatab";
 
 export interface CurriculumItem {
@@ -154,16 +156,16 @@ export const CURRICULUM: CurriculumAreaGroup[] = [
   {
     area: "樂句應用",
     items: [
-      { id: "licks-major-scale", area: "樂句應用", title: "大調音階licks", category: "D" },
-      { id: "licks-minor-scale", area: "樂句應用", title: "小調音階licks", category: "D" },
-      { id: "licks-major-pentatonic", area: "樂句應用", title: "大調五聲licks", category: "D" },
-      { id: "licks-minor-pentatonic", area: "樂句應用", title: "小調五聲licks", category: "D" },
+      { id: "licks-major-scale", area: "樂句應用", title: "大調音階licks", category: "D", tool: "/licks" },
+      { id: "licks-minor-scale", area: "樂句應用", title: "小調音階licks", category: "D", tool: "/licks" },
+      { id: "licks-major-pentatonic", area: "樂句應用", title: "大調五聲licks", category: "D", tool: "/licks" },
+      { id: "licks-minor-pentatonic", area: "樂句應用", title: "小調五聲licks", category: "D", tool: "/licks" },
       { id: "licks-harmonic-minor", area: "樂句應用", title: "和聲小調licks", category: "D" },
       { id: "licks-melodic-minor", area: "樂句應用", title: "旋律小調licks", category: "D" },
       { id: "licks-altered", area: "樂句應用", title: "Altered Scale licks", category: "D" },
-      { id: "licks-blues", area: "樂句應用", title: "藍調licks", category: "D" },
-      { id: "licks-modal", area: "樂句應用", title: "調式音階licks", category: "D" },
-      { id: "licks-arpeggio", area: "樂句應用", title: "琶音licks", category: "D" },
+      { id: "licks-blues", area: "樂句應用", title: "藍調licks", category: "D", tool: "/licks" },
+      { id: "licks-modal", area: "樂句應用", title: "調式音階licks", category: "D", tool: "/licks" },
+      { id: "licks-arpeggio", area: "樂句應用", title: "琶音licks", category: "D", tool: "/licks" },
       { id: "gear-tuner-metronome-capo", area: "樂句應用", title: "調音器/節拍器/移調夾使用", category: "C" },
       { id: "gear-effects", area: "樂句應用", title: "吉他效果器使用", category: "C" },
       { id: "gear-recording", area: "樂句應用", title: "錄音器材使用", category: "C" },
@@ -188,12 +190,12 @@ export const CURRICULUM: CurriculumAreaGroup[] = [
       { id: "theory-interval-7th", area: "樂理", title: "7度音程練習", category: "A", tool: "/intervals" },
       { id: "theory-three-notes-per-string", area: "樂理", title: "一弦三音", category: "C" },
       { id: "theory-pentatonic-sequence", area: "樂理", title: "五聲音階模進", category: "C" },
-      { id: "theory-secondary-dominant", area: "樂理", title: "次屬和弦", category: "C" },
-      { id: "theory-major-minor-interchange", area: "樂理", title: "大小調互換", category: "C" },
+      { id: "theory-secondary-dominant", area: "樂理", title: "次屬和弦", category: "A", tool: "/harmony" },
+      { id: "theory-major-minor-interchange", area: "樂理", title: "大小調互換", category: "A", tool: "/harmony" },
       { id: "theory-modulation", area: "樂理", title: "轉調", category: "C" },
-      { id: "theory-tritone-substitution", area: "樂理", title: "三全音代理", category: "C" },
-      { id: "theory-inversions", area: "樂理", title: "轉位和弦", category: "C" },
-      { id: "theory-drop-2", area: "樂理", title: "Drop 2", category: "C" },
+      { id: "theory-tritone-substitution", area: "樂理", title: "三全音代理", category: "A", tool: "/harmony" },
+      { id: "theory-inversions", area: "樂理", title: "轉位和弦", category: "A", tool: "/harmony" },
+      { id: "theory-drop-2", area: "樂理", title: "Drop 2", category: "A", tool: "/harmony" },
       { id: "theory-twin-guitar-concept", area: "樂理", title: "雙吉他演奏概念", category: "C" },
       { id: "theory-ensemble-practice", area: "樂理", title: "吉他合奏練習", category: "C" },
     ],

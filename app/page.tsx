@@ -37,6 +37,12 @@ export default function Home() {
           開啟音程練習 →
         </Link>
         <Link
+          href="/harmony"
+          className="inline-block rounded-md bg-rose-600 px-4 py-2 font-medium text-white hover:bg-rose-700"
+        >
+          開啟進階和聲 →
+        </Link>
+        <Link
           href="/practice"
           className="inline-block rounded-md bg-rose-600 px-4 py-2 font-medium text-white hover:bg-rose-700"
         >
@@ -47,6 +53,12 @@ export default function Home() {
           className="inline-block rounded-md bg-rose-600 px-4 py-2 font-medium text-white hover:bg-rose-700"
         >
           開啟圖表編輯器 →
+        </Link>
+        <Link
+          href="/licks"
+          className="inline-block rounded-md bg-rose-600 px-4 py-2 font-medium text-white hover:bg-rose-700"
+        >
+          開啟樂句庫 →
         </Link>
       </div>
     </main>
