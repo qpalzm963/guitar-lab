@@ -76,7 +76,7 @@ const GROUPS: Group[] = [
       {
         href: "/practice",
         title: "練習工具",
-        desc: "節拍器與持續音 Drone,練節奏與音準。",
+        desc: "節拍器、持續音、調音器與聽力測驗,練節奏、音準與辨音。",
       },
       {
         href: "/licks",
