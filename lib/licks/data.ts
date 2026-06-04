@@ -45,6 +45,14 @@ export interface Lick {
   /** Musical key, e.g. "Am", "E", "C". Display-only. */
   key: string;
   difficulty?: Difficulty;
+  /**
+   * True when the lick deliberately uses chromatic passing/approach tones that
+   * fall OUTSIDE its labeled scale (a standard blues/jazz idiom). The viewer
+   * badges these so a learner doesn't mistake the chromatic notes for scale
+   * tones. Licks WITHOUT this flag must be pure scale content — pinned by
+   * data.test ("every note is in the labeled scale unless hasChromatic").
+   */
+  hasChromatic?: boolean;
   /** Authored tempo in BPM (also embedded in alphaTex via \tempo). */
   tempo: number;
   /** Valid alphaTex source for the lick. */
@@ -63,7 +71,9 @@ export const LICKS: Lick[] = [
     key: "Am",
     difficulty: "初級",
     tempo: 80,
-    alphaTex: "\\tempo 80 . :8 5.1 8.1 7.2 5.2 7.3 5.3 7.4 5.4 | :4 7.5 5.5 :2 5.6",
+    // Fix: 7.2 (B-string fret 7 = F#) is OUTSIDE A minor pentatonic; the box-1
+    // B-string note is fret 8 (= G). Was 7.2, now 8.2.
+    alphaTex: "\\tempo 80 . :8 5.1 8.1 8.2 5.2 7.3 5.3 7.4 5.4 | :4 7.5 5.5 :2 5.6",
   },
   {
     id: "minor-pentatonic-rock",
@@ -74,7 +84,9 @@ export const LICKS: Lick[] = [
     difficulty: "中級",
     tempo: 110,
     alphaTex:
-      "\\tempo 110 . :8 8.1{b (0 4)} 5.1 7.2 5.2 | 7.2 5.2 :4 7.3 :2 5.3",
+      // Fix: both 7.2 (F#) → 8.2 (G), the in-scale box-1 B-string note (F# is
+      // not in A minor pentatonic).
+      "\\tempo 110 . :8 8.1{b (0 4)} 5.1 8.2 5.2 | 8.2 5.2 :4 7.3 :2 5.3",
   },
   {
     id: "major-pentatonic-pop",
@@ -84,7 +96,10 @@ export const LICKS: Lick[] = [
     key: "G",
     difficulty: "初級",
     tempo: 96,
-    alphaTex: "\\tempo 96 . :8 3.1 5.1 2.2 3.2 5.2 4.3 :4 5.3 2.2",
+    // Fix: 2.2 (C#) and 5.3 (C) are NOT in G major pentatonic (G A B D E). Kept
+    // every original string assignment, corrected only the 3 out-of-scale frets:
+    // 2.2→0.2 (B), 5.3→7.3 (D), final 2.2→3.2 (D). Now: G A B D E B | D D.
+    alphaTex: "\\tempo 96 . :8 3.1 5.1 0.2 3.2 5.2 4.3 :4 7.3 3.2",
   },
   {
     id: "major-pentatonic-funk",
@@ -104,6 +119,9 @@ export const LICKS: Lick[] = [
     key: "A",
     difficulty: "中級",
     tempo: 72,
+    // 6.2 (F) and 7.2 (F#) are chromatic passing tones walking E→F→F# — a blues
+    // idiom, not A blues scale tones. Kept, and flagged so the UI says so.
+    hasChromatic: true,
     alphaTex: "\\tempo 72 . :8 5.1 8.1{b (0 4)} 5.2 6.2 7.2 5.3 :4 7.4 5.4",
   },
   {
@@ -114,6 +132,9 @@ export const LICKS: Lick[] = [
     key: "E",
     difficulty: "進階",
     tempo: 120,
+    // 14.2 (C#, the major 6th) is a chromatic neighbour, not an E blues tone — a
+    // common blues-rock colour. Kept, and flagged so the UI says so.
+    hasChromatic: true,
     alphaTex:
       "\\tempo 120 . :8 12.1 15.1{h} 12.1 14.2{h} 12.2 | 15.2 12.2 :4 14.3 12.3",
   },
@@ -135,6 +156,9 @@ export const LICKS: Lick[] = [
     key: "C",
     difficulty: "進階",
     tempo: 132,
+    // 8.3 (Eb, b3) and 9.2 (Ab, b6) are bebop chromatic approach tones, not C
+    // major scale tones. Kept (idiomatic for a jazz walking line), and flagged.
+    hasChromatic: true,
     alphaTex:
       "\\tempo 132 . :8 8.3 10.3 12.3 9.2 10.2 12.2 13.2 :4 8.1",
   },

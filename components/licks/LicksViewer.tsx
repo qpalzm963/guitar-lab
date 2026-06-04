@@ -25,7 +25,7 @@ export function LicksViewer() {
   const matches = useMemo(() => filterLicks(scale, style), [scale, style]);
 
   // The chosen lick, by id, so it survives filter changes when still in range.
-  const [selectedId, setSelectedId] = useState<string>(LICKS[0].id);
+  const [selectedId, setSelectedId] = useState<string>(LICKS[0]?.id ?? "");
   const selected: Lick | undefined = useMemo(
     () => matches.find((l) => l.id === selectedId) ?? matches[0],
     [matches, selectedId],
@@ -100,12 +100,20 @@ export function LicksViewer() {
                 難度 {selected.difficulty}
               </span>
             )}
+            {selected.hasChromatic && (
+              <span
+                className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700"
+                title="此樂句含音階以外的半音過渡音/接近音(藍調、爵士常見);它們不是該音階的音。"
+              >
+                含半音音
+              </span>
+            )}
           </div>
 
-          {/* key on id: remount the player per lick so the synth state resets
-              cleanly when switching (the player also handles in-place tex swaps,
-              but a fresh instance is the simplest correct reset). */}
-          <AlphaTabPlayer key={selected.id} alphaTex={selected.alphaTex} />
+          {/* No key= here: the player keeps ONE alphaTab instance (synth +
+              soundfont) across lick changes and swaps the score in place via
+              api.tex(), so switching licks no longer reloads the 954 KB soundfont. */}
+          <AlphaTabPlayer alphaTex={selected.alphaTex} />
         </div>
       )}
     </div>

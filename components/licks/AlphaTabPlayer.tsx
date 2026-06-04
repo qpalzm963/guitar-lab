@@ -141,8 +141,11 @@ export function AlphaTabPlayer({ alphaTex }: AlphaTabPlayerProps) {
   useEffect(() => {
     const api = apiRef.current;
     if (!api) return;
+    // Swap the score in place (no synth/soundfont reload). Stop any current
+    // playback first so the cursor/transport reset cleanly to the new lick.
     setStatus("loading");
     setMessage("載入樂譜中…");
+    api.stop();
     api.tex(alphaTex);
   }, [alphaTex]);
 
@@ -185,7 +188,7 @@ export function AlphaTabPlayer({ alphaTex }: AlphaTabPlayerProps) {
           🔁 循環{isLooping ? "(開)" : "(關)"}
         </ToggleButton>
 
-        <div className="flex items-center gap-1">
+        <div role="group" aria-label="播放速度" className="flex items-center gap-1">
           <span className="text-sm text-gray-500">速度</span>
           {SPEEDS.map((s) => (
             <ToggleButton
@@ -207,6 +210,8 @@ export function AlphaTabPlayer({ alphaTex }: AlphaTabPlayerProps) {
           the playback cursor over it. */}
       <div
         ref={containerRef}
+        role="img"
+        aria-label="樂譜(六線譜與五線譜)"
         className="overflow-x-auto rounded-lg border border-gray-200 bg-white p-4"
       />
     </div>
