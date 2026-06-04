@@ -159,6 +159,18 @@ describe("useDiagrams persist migrate (corruption safety)", () => {
     expect(out.diagrams).toEqual([]);
   });
 
+  it("keeps the valid diagrams and drops only the corrupt entry", () => {
+    // Data-loss guard: under the old all-or-nothing parse, ONE bad entry threw
+    // away the user's entire library on rehydrate. Migrate must preserve every
+    // valid diagram and discard only the malformed one.
+    const mixed = {
+      diagrams: [makeDiagram({ id: "ok" }), { id: "bad", markers: "nope" }],
+    };
+    const out = migrate(mixed, 0) as { diagrams: SavedDiagram[] };
+    expect(out.diagrams).toHaveLength(1);
+    expect(out.diagrams[0].id).toBe("ok");
+  });
+
   it("tolerates a totally absent persisted state", () => {
     const out = migrate(undefined, 0) as { diagrams: SavedDiagram[] };
     expect(out.diagrams).toEqual([]);

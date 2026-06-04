@@ -109,6 +109,8 @@ export function DiagramEditor({ initial, onSaved }: DiagramEditorProps) {
     setBusy(true);
     try {
       await downloadSvgAsPng(svg, `${(name || title || "diagram").trim()}.png`);
+    } catch {
+      window.alert("匯出 PNG 失敗,請重試。");
     } finally {
       setBusy(false);
     }
@@ -177,6 +179,7 @@ export function DiagramEditor({ initial, onSaved }: DiagramEditorProps) {
               value={label}
               onChange={(e) => setLabel(e.target.value)}
               placeholder="例如 1、3、R"
+              maxLength={3}
               className="rounded-md border border-gray-300 px-3 py-1.5 w-40"
             />
           </Field>

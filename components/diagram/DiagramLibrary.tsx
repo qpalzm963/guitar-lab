@@ -44,7 +44,9 @@ export function DiagramLibrary() {
       `[data-preview="${id}"] svg`,
     );
     if (!svg) return;
-    void downloadSvgAsPng(svg, `${fallbackName}.png`);
+    downloadSvgAsPng(svg, `${fallbackName}.png`).catch(() => {
+      window.alert("匯出 PNG 失敗,請重試。");
+    });
   }
 
   function backupJson() {
@@ -139,7 +141,10 @@ export function DiagramLibrary() {
             >
               <div className="flex items-baseline justify-between gap-2">
                 <span className="font-medium text-gray-900">{d.name}</span>
-                <time className="text-xs text-gray-400">
+                <time
+                  dateTime={new Date(d.createdAt).toISOString()}
+                  className="text-xs text-gray-500"
+                >
                   {new Date(d.createdAt).toLocaleDateString("zh-TW")}
                 </time>
               </div>
@@ -155,23 +160,27 @@ export function DiagramLibrary() {
                   tuning={d.tuning}
                   toFret={d.toFret}
                   labelMode="name"
+                  ariaLabel={`${d.name} 的指板圖${d.title ? `:${d.title}` : ""}`}
                 />
               </div>
               <div className="mt-1 flex flex-wrap gap-2">
                 <Button
                   variant="secondary"
+                  aria-label={`開啟 / 編輯「${d.name}」`}
                   onClick={() => setView({ mode: "edit", diagram: d })}
                 >
                   開啟 / 編輯
                 </Button>
                 <Button
                   variant="ghost"
+                  aria-label={`匯出「${d.name}」為 PNG`}
                   onClick={() => exportItemPng(d.id, d.name)}
                 >
                   匯出 PNG
                 </Button>
                 <Button
                   variant="ghost"
+                  aria-label={`刪除「${d.name}」`}
                   onClick={() => {
                     if (window.confirm(`刪除「${d.name}」?`)) remove(d.id);
                   }}

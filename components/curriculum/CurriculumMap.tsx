@@ -4,13 +4,18 @@ import { useEffect } from "react";
 import Link from "next/link";
 import {
   CURRICULUM,
+  ALL_ITEMS,
   CATEGORY_LEGEND,
   TOTAL_ITEMS,
   type CurriculumItem,
   type CurriculumCategory,
 } from "@/lib/curriculum/data";
-import { useProgress } from "@/lib/store/progress";
+import { useProgress, countDone } from "@/lib/store/progress";
 import { lessonSlugForItem } from "@/lib/course/data";
+
+// The canonical id set the progress tally counts against — so stale ids (retired
+// from the curriculum) can't inflate the count past TOTAL_ITEMS.
+const ALL_ITEM_IDS = ALL_ITEMS.map((it) => it.id);
 
 // Category badge colors. Kept muted so the row content stays the focus; the
 // legend at the top spells each letter out in zh-TW.
@@ -80,7 +85,9 @@ export function CurriculumMap() {
     useProgress.persist.rehydrate();
   }, []);
 
-  const doneTotal = useProgress((s) => Object.keys(s.done).length);
+  // Count only items that still exist in the curriculum (see countDone) so a
+  // stale stored id can't push the tally past TOTAL_ITEMS.
+  const doneTotal = useProgress((s) => countDone(s.done, ALL_ITEM_IDS));
   const clearAll = useProgress((s) => s.clearAll);
 
   return (
@@ -102,8 +109,13 @@ export function CurriculumMap() {
           ))}
         </div>
         <button
-          onClick={clearAll}
-          className="rounded-md border border-gray-300 bg-white px-3 py-1 text-sm text-gray-700 transition-colors hover:bg-gray-50 cursor-pointer"
+          onClick={() => {
+            // Irreversible — confirm before wiping all stored progress.
+            if (window.confirm("確定要清除所有學習進度?此動作無法復原。")) {
+              clearAll();
+            }
+          }}
+          className="rounded-md border border-gray-300 bg-white px-3 py-1 text-sm text-gray-700 transition-colors hover:bg-gray-50 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-1"
         >
           清除進度
         </button>
@@ -114,9 +126,13 @@ export function CurriculumMap() {
         {CURRICULUM.map((group) => (
             <section
               key={group.area}
+              aria-labelledby={`area-${group.area}`}
               className="rounded-lg border border-gray-200 bg-white p-4"
             >
-              <h2 className="mb-2 border-b border-gray-100 pb-2 text-lg font-semibold">
+              <h2
+                id={`area-${group.area}`}
+                className="mb-2 border-b border-gray-100 pb-2 text-lg font-semibold"
+              >
                 {group.area}
                 <span className="ml-2 text-xs font-normal text-gray-400">
                   {group.items.length} 項

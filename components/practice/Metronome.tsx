@@ -39,6 +39,10 @@ export function Metronome() {
   const [currentBeat, setCurrentBeat] = useState(-1);
 
   const engineRef = useRef<MetronomeEngine | null>(null);
+  // Mirrors `running` synchronously so an in-flight meter-change restart can tell
+  // whether the user has since pressed 停止 (React state updates are async).
+  const runningRef = useRef(false);
+  const [audioError, setAudioError] = useState<string | null>(null);
 
   function buildConfig(): MetronomeConfig {
     return {
@@ -61,13 +65,27 @@ export function Metronome() {
     const engine = engineRef.current;
     if (!engine || !engine.isRunning) return;
     const meterChanged = engine.setConfig(buildConfig());
-    if (meterChanged) {
-      // Restart to apply the new subdivision/meter scheduling cleanly.
-      void (async () => {
+    if (!meterChanged) return;
+    // Restart to apply the new subdivision/meter scheduling cleanly. Guard the
+    // gap between stop() and start(): if the user pressed 停止 (or another meter
+    // change superseded this one) during the await, do NOT restart — otherwise
+    // the engine ghost-runs while the UI shows 開始.
+    let cancelled = false;
+    void (async () => {
+      try {
         await engine.stop();
+        if (cancelled || !runningRef.current) return;
         await engine.start();
-      })();
-    }
+      } catch {
+        runningRef.current = false;
+        setRunning(false);
+        setCurrentBeat(-1);
+        setAudioError("無法套用新的節拍設定,請重新開始。");
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bpm, beatsPerBar, subdivision, accentMode, rampEnabled, rampStep, rampEveryBars, rampMax]);
 
@@ -81,20 +99,37 @@ export function Metronome() {
 
   async function handleStart() {
     // CRITICAL: engine.start() awaits Tone.start() inside this user-gesture
-    // handler before the transport runs — the #1 "no sound" fix.
-    if (!engineRef.current) {
-      engineRef.current = new MetronomeEngine(buildConfig(), (beat) => {
-        setCurrentBeat(beat);
-      });
-    } else {
-      engineRef.current.setConfig(buildConfig());
+    // handler before the transport runs — the #1 "no sound" fix. Wrapped so a
+    // blocked AudioContext (autoplay policy, iOS) surfaces an inline message
+    // instead of silently leaving the UI "running" with no sound.
+    try {
+      if (!engineRef.current) {
+        engineRef.current = new MetronomeEngine(buildConfig(), (beat) => {
+          setCurrentBeat(beat);
+        });
+      } else {
+        engineRef.current.setConfig(buildConfig());
+      }
+      await engineRef.current.start();
+      runningRef.current = true;
+      setRunning(true);
+      setAudioError(null);
+    } catch {
+      runningRef.current = false;
+      setRunning(false);
+      setCurrentBeat(-1);
+      setAudioError("無法啟動音訊,請先點擊頁面再試一次。");
     }
-    await engineRef.current.start();
-    setRunning(true);
   }
 
   async function handleStop() {
-    await engineRef.current?.stop();
+    // Clear the ref FIRST (synchronously) so any in-flight restart bails.
+    runningRef.current = false;
+    try {
+      await engineRef.current?.stop();
+    } catch {
+      // Stopping should never surface an error — the engine is going quiet anyway.
+    }
     setRunning(false);
     setCurrentBeat(-1);
   }
@@ -111,11 +146,18 @@ export function Metronome() {
         <Button
           variant={running ? "secondary" : "primary"}
           onClick={toggle}
+          aria-pressed={running}
           className="min-w-20"
         >
           {running ? "停止" : "開始"}
         </Button>
       </div>
+
+      {audioError && (
+        <p className="text-sm text-rose-600" role="alert">
+          {audioError}
+        </p>
+      )}
 
       {/* Visual beat indicator */}
       <div className="flex flex-wrap gap-2" aria-label="拍點指示">

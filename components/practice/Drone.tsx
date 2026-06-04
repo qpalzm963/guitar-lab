@@ -15,15 +15,16 @@ import { Field, Select } from "@/components/ui/Field";
 const FLAT_TO_SHARP: Record<string, string> = {
   Db: "C#",
   Eb: "D#",
-  Gb: "F#",
   Ab: "G#",
   Bb: "A#",
+  // (No Gb: ROOT_OPTIONS uses F# directly, so a Gb key never reaches here.)
 };
 
 export function Drone() {
   const [root, setRoot] = useState("A");
   const [octave, setOctave] = useState<number>(DEFAULT_DRONE_OCTAVE);
   const [playing, setPlaying] = useState(false);
+  const [audioError, setAudioError] = useState<string | null>(null);
   const engineRef = useRef<DroneEngine | null>(null);
 
   function pitch(): string {
@@ -34,7 +35,11 @@ export function Drone() {
   // Re-pitch live if the note/octave changes while sounding.
   useEffect(() => {
     const engine = engineRef.current;
-    if (engine?.isPlaying) void engine.start(pitch());
+    if (!engine?.isPlaying) return;
+    void engine.start(pitch()).catch(() => {
+      setPlaying(false);
+      setAudioError("無法切換音高,請重新開始。");
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [root, octave]);
 
@@ -46,14 +51,20 @@ export function Drone() {
   }, []);
 
   async function toggle() {
-    if (playing) {
-      await engineRef.current?.stop();
+    try {
+      if (playing) {
+        await engineRef.current?.stop();
+        setPlaying(false);
+        return;
+      }
+      if (!engineRef.current) engineRef.current = new DroneEngine();
+      await engineRef.current.start(pitch());
+      setPlaying(true);
+      setAudioError(null);
+    } catch {
       setPlaying(false);
-      return;
+      setAudioError("無法啟動音訊,請先點擊頁面再試一次。");
     }
-    if (!engineRef.current) engineRef.current = new DroneEngine();
-    await engineRef.current.start(pitch());
-    setPlaying(true);
   }
 
   return (
@@ -63,11 +74,17 @@ export function Drone() {
         <Button
           variant={playing ? "secondary" : "primary"}
           onClick={toggle}
+          aria-pressed={playing}
           className="min-w-20"
         >
           {playing ? "停止" : "開始"}
         </Button>
       </div>
+      {audioError && (
+        <p className="text-sm text-rose-600" role="alert">
+          {audioError}
+        </p>
+      )}
       <p className="text-sm text-gray-500">
         播放一個持續的根音,用來練習音準與音感。
       </p>

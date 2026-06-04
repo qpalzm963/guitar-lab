@@ -18,7 +18,7 @@ vi.hoisted(() => {
   (globalThis as unknown as { localStorage: Storage }).localStorage = stub;
 });
 
-import { useProgress } from "./progress";
+import { useProgress, countDone } from "./progress";
 
 beforeEach(() => {
   // Reset to "nothing learned" before each test for isolation.
@@ -58,6 +58,24 @@ describe("useProgress toggle / isDone", () => {
     useProgress.getState().clearAll();
     expect(useProgress.getState().doneCount()).toBe(0);
     expect(useProgress.getState().isDone("a")).toBe(false);
+  });
+});
+
+describe("countDone (tally against the canonical curriculum ids)", () => {
+  it("counts only stored ids that are in the canonical set", () => {
+    // The displayed 已學 tally must ignore stored ids no longer in the curriculum,
+    // so a retired id can never push the count past TOTAL_ITEMS (the 113/111 bug).
+    const done = { a: true, b: true, "retired-id": true } as Record<string, true>;
+    expect(countDone(done, ["a", "b", "c"])).toBe(2); // a,b in set; retired ignored; c not done
+  });
+
+  it("never exceeds the canonical id count, even with extra stored ids", () => {
+    const done = { a: true, b: true, c: true, d: true } as Record<string, true>;
+    expect(countDone(done, ["a", "b"])).toBe(2);
+  });
+
+  it("returns 0 for an empty progress record", () => {
+    expect(countDone({}, ["a", "b"])).toBe(0);
   });
 });
 

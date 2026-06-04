@@ -27,6 +27,21 @@ function sanitizeDone(raw: unknown): Record<string, true> {
   return out;
 }
 
+/**
+ * Count how many of the CANONICAL curriculum ids are marked done. Use this for
+ * the progress tally instead of Object.keys(done).length: the raw key count also
+ * includes ids retired from the curriculum in a later revision, which would
+ * inflate the number past the total (e.g. 113/111 after an item is renamed).
+ */
+export function countDone(
+  done: Record<string, true>,
+  ids: readonly string[],
+): number {
+  let n = 0;
+  for (const id of ids) if (done[id] === true) n++;
+  return n;
+}
+
 // SSR-safe persist, mirroring lib/store/diagrams.ts: skipHydration keeps the
 // store off localStorage during server/first-client render (no hydration
 // mismatch); the client calls useProgress.persist.rehydrate() in an effect.

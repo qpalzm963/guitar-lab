@@ -36,6 +36,9 @@ interface DiagramsState {
 
 // Runtime shape guards. The persisted blob and any imported JSON are untrusted,
 // so we validate before trusting them — a corrupt entry must not crash the app.
+// The valid NoteRole values — kept in sync with lib/theory/types.ts NoteRole.
+const VALID_ROLES = new Set(["root", "scale", "reference", "custom", "shared"]);
+
 function isMarker(v: unknown): v is Marker {
   if (typeof v !== "object" || v === null) return false;
   const m = v as Record<string, unknown>;
@@ -43,7 +46,10 @@ function isMarker(v: unknown): v is Marker {
     typeof m.string === "number" &&
     typeof m.fret === "number" &&
     typeof m.pitchClass === "string" &&
+    // Validate the role VALUE, not just its type: an unknown role (e.g. from a
+    // hand-edited import) renders fill="undefined" → an invisible/black circle.
     typeof m.role === "string" &&
+    VALID_ROLES.has(m.role) &&
     typeof m.isRoot === "boolean"
   );
 }
@@ -69,6 +75,18 @@ function parseDiagrams(raw: unknown): SavedDiagram[] | null {
   if (!Array.isArray(raw)) return null;
   if (!raw.every(isSavedDiagram)) return null;
   return raw as SavedDiagram[];
+}
+
+/**
+ * Keep only the valid diagrams from an unknown blob, dropping malformed entries
+ * INDIVIDUALLY. Used on rehydrate so a single corrupt diagram (e.g. a partial
+ * write or a hand-edited entry) can't discard the user's whole library — they
+ * lose only the broken one. (parseDiagrams stays all-or-nothing for explicit
+ * importJson, where an exact-or-reject restore is the safer contract.)
+ */
+function keepValidDiagrams(raw: unknown): SavedDiagram[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.filter(isSavedDiagram) as SavedDiagram[];
 }
 
 // SSR-safe persist, mirroring lib/store/settings.ts: skipHydration keeps the
@@ -109,12 +127,13 @@ export const useDiagrams = create<DiagramsState>()(
       version: 1,
       storage: createJSONStorage(() => localStorage),
       skipHydration: true,
-      // Corruption safety: if the persisted blob is malformed (e.g. a partial
-      // write or a hand-edited localStorage), fall back to an empty library
-      // instead of letting bad data through and crashing the render.
+      // Corruption safety: drop only the malformed entries (e.g. a partial write
+      // or a hand-edited localStorage), keeping every valid diagram. One bad
+      // entry must not wipe the whole library, and bad data must never reach the
+      // render.
       migrate: (persisted) => {
         const state = persisted as Partial<DiagramsState> | undefined;
-        const safe = parseDiagrams(state?.diagrams) ?? [];
+        const safe = keepValidDiagrams(state?.diagrams);
         return { ...(state ?? {}), diagrams: safe } as DiagramsState;
       },
     },
