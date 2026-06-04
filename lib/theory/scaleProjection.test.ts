@@ -21,6 +21,18 @@ describe("intervalToDegree", () => {
     expect(intervalToDegree("5P")).toBe("5");
     expect(intervalToDegree("7m")).toBe("b7");
   });
+
+  it("emits a sharp for an augmented interval (lydian's #4)", () => {
+    // The alt>0 (sharp) branch is otherwise only exercised indirectly; pin it so a
+    // regression that dropped the # or emitted a b would fail loudly.
+    expect(intervalToDegree("4A")).toBe("#4");
+  });
+
+  it("returns the input unchanged for an unparseable interval (never 'NaN')", () => {
+    // Interval.get('garbage').num is NaN (not null); the guard must catch NaN so
+    // the degree never renders the literal string 'NaN'.
+    expect(intervalToDegree("garbage")).toBe("garbage");
+  });
 });
 
 describe("scaleMarkers", () => {

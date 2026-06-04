@@ -174,6 +174,9 @@ export function CagedExplorer() {
           positionHighlight={
             current ? { from: current.from, to: current.to } : null
           }
+          ariaLabel={`${root} CAGED ${current?.shape ?? ""}型指板圖${
+            current ? `,第 ${current.from}-${current.to} 格` : ""
+          }`}
         />
       </ScrollableBoard>
     </div>

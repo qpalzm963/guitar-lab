@@ -1,7 +1,23 @@
-import { Chord, Note } from "tonal";
+import { Chord, Note, Interval } from "tonal";
 import { STANDARD_TUNING, DEFAULT_FRET_COUNT, midiAt } from "./fretboard";
 import { intervalToDegree } from "./scaleProjection";
 import type { Marker } from "./types";
+
+/**
+ * Degree label for a CHORD tone. Like intervalToDegree, but PRESERVES compound
+ * extensions (9, 11, 13) instead of folding them mod 7. add9 is built from the
+ * compound 9th (tonal interval "9M"); the scale-oriented intervalToDegree would
+ * fold it to "2", mislabeling the chord's defining extension. Simple tones
+ * (≤ a 7th) defer to intervalToDegree so spelling/accidentals stay consistent.
+ */
+function chordDegree(interval: string): string {
+  const { num, alt } = Interval.get(interval);
+  if (num != null && num >= 8) {
+    const acc = !alt ? "" : alt < 0 ? "b".repeat(-alt) : "#".repeat(alt);
+    return `${acc}${num}`;
+  }
+  return intervalToDegree(interval);
+}
 
 /**
  * Curriculum-relevant chord types. `type` is the tonal chord symbol appended to
@@ -54,7 +70,7 @@ export function chordMarkers(
   chord.notes.forEach((n, i) => {
     const c = Note.chroma(n);
     if (c == null) return;
-    degreeByChroma.set(c, intervalToDegree(chord.intervals[i]));
+    degreeByChroma.set(c, chordDegree(chord.intervals[i]));
     spellingByChroma.set(c, Note.pitchClass(n));
   });
 

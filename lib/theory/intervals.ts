@@ -25,6 +25,16 @@ export const INTERVALS: { id: string; label: string }[] = [
   { id: "8P", label: "完全八度 P8" },
 ];
 
+// Intervals eligible as a quiz ANSWER. Unison (1P) and octave (8P) are both
+// excluded because they share the root's chroma, so intervalMarkers() emits only
+// root markers and NO distinct "音程音" (blue note) — the board would show roots
+// only, making "藍點是什麼音程?" unanswerable. Every other interval marks a
+// distinct note, so each is a valid thing to identify. (1P/8P stay in INTERVALS
+// for the reference-mode picker; this list only governs quiz answers.)
+export const QUIZ_INTERVALS = INTERVALS.filter(
+  (i) => i.id !== "1P" && i.id !== "8P",
+);
+
 export interface IntervalProjectionOptions {
   tuning?: readonly string[];
   fromFret?: number;

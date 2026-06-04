@@ -125,7 +125,12 @@ export function ChordExplorer() {
       </div>
 
       <ScrollableBoard ref={boardRef} className="space-y-4">
-        <Fretboard markers={markers} labelMode={labels} toFret={15} />
+        <Fretboard
+          markers={markers}
+          labelMode={labels}
+          toFret={15}
+          ariaLabel={`${root}${type} 和弦指板圖`}
+        />
         {shape ? (
           <div>
             <p className="mb-2 text-xs text-gray-500">常用按法 Common fingering</p>

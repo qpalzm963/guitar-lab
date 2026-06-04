@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import { Fretboard } from "@/components/fretboard/Fretboard";
-import { intervalMarkers, INTERVALS } from "@/lib/theory/intervals";
+import { intervalMarkers, INTERVALS, QUIZ_INTERVALS } from "@/lib/theory/intervals";
 import { downloadSvgAsPng } from "@/lib/export/svgToPng";
 import { ROOT_OPTIONS } from "@/lib/theory/notes";
 import type { LabelMode } from "@/lib/store/settings";
@@ -23,11 +23,10 @@ const LABELS: { id: LabelMode; label: string }[] = [
 type Mode = "reference" | "quiz";
 
 // A quiz round: a fixed root + the interval the learner must name. The board
-// shows only that one interval note (plus the root), and the four options are
-// drawn from INTERVALS. Octave (8P) is excluded as a quiz answer because it adds
-// no distinct interval marker — the board would look like roots only.
-const QUIZ_INTERVALS = INTERVALS.filter((i) => i.id !== "8P");
-
+// shows only that one interval note (plus the root); the four options are drawn
+// from QUIZ_INTERVALS (defined in the theory layer). That list excludes unison
+// (1P) AND octave (8P) — both share the root's chroma, so they show no distinct
+// blue note, which would make the board roots-only and the question unanswerable.
 function pickInt(max: number): number {
   return Math.floor(Math.random() * max);
 }
@@ -153,7 +152,7 @@ export function IntervalExplorer() {
   // is answer FEEDBACK, not selection — so they stay raw buttons. This is just
   // the shared pill geometry they reuse.
   const quizPill =
-    "rounded-md px-3 py-1.5 text-sm border transition-colors cursor-pointer";
+    "rounded-md px-3 py-1.5 text-sm border transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-1";
   const legend = (
     <div className="flex items-center gap-4 text-xs text-gray-500">
       <span className="flex items-center gap-1.5">
@@ -229,7 +228,12 @@ export function IntervalExplorer() {
           {legend}
 
           <ScrollableBoard ref={boardRef}>
-            <Fretboard markers={markers} labelMode={labels} toFret={15} />
+            <Fretboard
+              markers={markers}
+              labelMode={labels}
+              toFret={15}
+              ariaLabel={`根音 ${root},${intervalLabel(interval)} 指板圖`}
+            />
           </ScrollableBoard>
         </>
       ) : (
@@ -252,7 +256,12 @@ export function IntervalExplorer() {
           {/* Quiz board: degrees hidden (labelMode none) so the answer isn't
               given away by the degree text on the blue note. */}
           <ScrollableBoard>
-            <Fretboard markers={quizMarkers} labelMode="none" toFret={15} />
+            <Fretboard
+              markers={quizMarkers}
+              labelMode="none"
+              toFret={15}
+              ariaLabel="音程辨認測驗指板,藍點為待辨認的音程音"
+            />
           </ScrollableBoard>
 
           <div className="flex flex-wrap gap-2">

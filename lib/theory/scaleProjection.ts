@@ -9,7 +9,9 @@ import type { Marker } from "./types";
  */
 export function intervalToDegree(ivl: string): string {
   const { num, alt } = Interval.get(ivl);
-  if (num == null) return ivl;
+  // Interval.get on junk yields num: NaN (not null), and NaN == null is false, so
+  // guard both — otherwise ((NaN-1)%7)+1 = NaN would render the label "NaN".
+  if (num == null || Number.isNaN(num)) return ivl;
   const degNum = ((num - 1) % 7) + 1;
   const acc = !alt ? "" : alt < 0 ? "b".repeat(-alt) : "#".repeat(alt);
   return `${acc}${degNum}`;

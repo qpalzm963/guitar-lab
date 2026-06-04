@@ -82,6 +82,24 @@ describe("chordMarkers", () => {
     for (const m of nonRoot) expect(m.role).toBe("scale");
   });
 
+  it("add9's added tone reads degree 9, not 2 (compound extension preserved)", () => {
+    // Cadd9 = C E G D; the D is the compound 9th (tonal interval 9M). The degree
+    // toggle must show "9" — folding it to "2" (a plain second) misrepresents the
+    // chord's defining extension. The triad tones still read 1/3/5.
+    const deg = degreeByChroma(chordMarkers("C", "add9"));
+    expect(deg.get(Note.chroma("D")!)).toBe("9");
+    expect(deg.get(Note.chroma("C")!)).toBe("1");
+    expect(deg.get(Note.chroma("E")!)).toBe("3");
+    expect(deg.get(Note.chroma("G")!)).toBe("5");
+  });
+
+  it("C6's 6th still reads 6 (a simple interval is not folded to a number)", () => {
+    // Guard the boundary: only compound intervals (≥ an octave) get the literal
+    // number; C6's 6th is a simple 6M and must stay "6", not become "13".
+    const deg = degreeByChroma(chordMarkers("C", "6"));
+    expect(deg.get(Note.chroma("A")!)).toBe("6");
+  });
+
   it("returns empty for an unknown chord type", () => {
     expect(chordMarkers("C", "not-a-chord")).toEqual([]);
   });

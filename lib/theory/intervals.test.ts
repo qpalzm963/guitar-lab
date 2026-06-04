@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { Note } from "tonal";
-import { intervalMarkers, INTERVALS } from "./intervals";
+import { intervalMarkers, INTERVALS, QUIZ_INTERVALS } from "./intervals";
 import type { Marker } from "./types";
 
 const chromaSet = (markers: Marker[]) =>
@@ -74,5 +74,33 @@ describe("intervalMarkers", () => {
       const markers = intervalMarkers("C", id);
       expect(markers.length).toBeGreaterThan(0);
     }
+  });
+});
+
+describe("QUIZ_INTERVALS (quiz-answerable intervals)", () => {
+  it("excludes unison (1P) and octave (8P)", () => {
+    // Both share the root's chroma, so a quiz board would show roots only — the
+    // prompt "藍點是什麼音程?" would have no blue note to identify.
+    const ids = QUIZ_INTERVALS.map((i) => i.id);
+    expect(ids).not.toContain("1P");
+    expect(ids).not.toContain("8P");
+  });
+
+  it("every quiz-answer interval marks at least one distinct (non-root) note", () => {
+    // The real invariant the exclusion protects: a quizzable interval MUST put a
+    // 音程音 on the board. This fails for 1P/8P — and for any future interval that
+    // collapses onto the root chroma — so it pins WHY they're excluded.
+    for (const { id } of QUIZ_INTERVALS) {
+      const distinct = intervalMarkers("C", id).filter((m) => !m.isRoot);
+      expect(
+        distinct.length,
+        `${id} must mark a distinct interval note`,
+      ).toBeGreaterThan(0);
+    }
+  });
+
+  it("is non-empty and a strict subset of the full INTERVALS picker", () => {
+    expect(QUIZ_INTERVALS.length).toBeGreaterThan(0);
+    expect(QUIZ_INTERVALS.length).toBeLessThan(INTERVALS.length);
   });
 });

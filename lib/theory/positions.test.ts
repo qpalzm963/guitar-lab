@@ -8,9 +8,12 @@ import { DEFAULT_FRET_COUNT } from "./fretboard";
 // fretjam.com/pentatonic-scale-patterns (the classic "5 box" system).
 
 describe("scalePositions — minor pentatonic boxes", () => {
-  it("A minor pentatonic box 1 spans frets 5–8 (root on low E at 5)", () => {
+  it("A minor pentatonic offers 4 fully-on-neck boxes, box 1 = frets 5–8", () => {
     const pos = scalePositions("A", "minor pentatonic");
-    expect(pos.length).toBe(5);
+    // Box 1 starts at fret 5 (root A on the low E string). The classic 5-box
+    // system's box 5 sits at frets 14–17, which runs off the 15-fret board — so it
+    // is NOT offered (half a box would mislead a learner). 4 complete boxes remain.
+    expect(pos.length).toBe(4);
     expect(pos[0].from).toBe(5);
     expect(pos[0].to).toBe(8);
   });
@@ -36,14 +39,16 @@ describe("scalePositions — minor pentatonic boxes", () => {
     expect(pos[0].to).toBe(3);
   });
 
-  it("every offered box starts on the rendered neck and is well-ordered (from ≤ to)", () => {
-    for (const root of ["A", "E", "C", "G", "D"]) {
+  it("every offered box fits FULLY on the rendered neck (0 ≤ from ≤ to ≤ maxFret)", () => {
+    for (const root of ["A", "E", "C", "G", "D", "Bb", "B"]) {
       const pos = scalePositions(root, "minor pentatonic");
       for (const p of pos) {
         expect(p.from).toBeGreaterThanOrEqual(0);
         expect(p.from).toBeLessThanOrEqual(p.to);
-        // A box must start within the rendered neck, else it would render empty.
-        expect(p.from).toBeLessThanOrEqual(DEFAULT_FRET_COUNT);
+        // The WHOLE window must fit — not just its start. A box whose `to` runs
+        // off the board would render CLIPPED (only some of its notes), which is
+        // exactly the bug this guards: checking `to`, not just `from`.
+        expect(p.to).toBeLessThanOrEqual(DEFAULT_FRET_COUNT);
       }
     }
   });
@@ -106,10 +111,10 @@ describe("scalePositions — scales without a canonical box system", () => {
 });
 
 describe("scalePositions — labels", () => {
-  it("labels are zh-TW 第N把位", () => {
+  it("labels are sequential zh-TW 第N把位", () => {
     const pos = scalePositions("A", "minor pentatonic");
-    expect(pos[0].label).toBe("第1把位");
-    expect(pos[4].label).toBe("第5把位");
+    expect(pos.length).toBeGreaterThan(0);
+    pos.forEach((p, i) => expect(p.label).toBe(`第${i + 1}把位`));
   });
 });
 

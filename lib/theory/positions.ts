@@ -20,8 +20,9 @@ import { cagedWindows } from "./caged";
  *    string). We deliberately reuse the exact CAGED chord windows (lib/theory/
  *    caged.ts) so the scale "把位" and the CAGED view share one mental model and
  *    one verified anchor math, rather than introducing a second, independent
- *    position system. A mode's positions use the parent major key's windows
- *    shifted to the mode's own tonic via its relative major.
+ *    position system. A mode REUSES its parent major key's CAGED windows
+ *    UNCHANGED (same notes, same neck regions) — the windows are NOT re-anchored
+ *    to the mode's own tonic; positions are simply numbered low-to-high.
  *
  * Anything else (blues, harmonic/melodic minor) has no single canonical box
  * system, so scalePositions returns [] and the UI shows whole-neck only.
@@ -140,10 +141,12 @@ export function scalePositions(
     return [];
   }
 
-  // Only offer positions that actually appear on the rendered neck (0..maxFret),
-  // so the user never selects a 把位 that renders an empty fretboard. Re-number
-  // the survivors sequentially so the labels stay 第1..第N.
+  // Only offer positions whose FULL window fits on the rendered neck (0..maxFret),
+  // so the user never selects a 把位 that renders a CLIPPED or empty fretboard.
+  // Check `to`, not just `from`: a box like A-minor-pentatonic 第5把位 [14,17]
+  // starts on the neck but its top half runs off a 15-fret board, so it would show
+  // only half its notes. Re-number the survivors sequentially (labels stay 第1..第N).
   return raw
-    .filter((p) => p.from <= maxFret)
+    .filter((p) => p.to <= maxFret)
     .map((p, i) => ({ ...p, index: i, label: `第${i + 1}把位` }));
 }

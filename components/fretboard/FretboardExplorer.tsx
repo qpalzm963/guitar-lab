@@ -193,6 +193,9 @@ export function FretboardExplorer() {
           labelMode={labels}
           toFret={15}
           positionHighlight={active ? { from: active.from, to: active.to } : null}
+          ariaLabel={`${root} ${
+            SCALES.find((s) => s.id === scaleName)?.label ?? scaleName
+          } 指板圖${active ? `,第 ${active.from}-${active.to} 格` : ""}`}
         />
       </ScrollableBoard>
     </div>
