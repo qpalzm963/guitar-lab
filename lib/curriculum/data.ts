@@ -16,7 +16,7 @@ export type CurriculumArea =
   | "和弦"
   | "節奏訓練"
   | "技巧"
-  | "樂句應用"
+  | "樂句・編曲・器材"
   | "樂理";
 
 export type CurriculumCategory = "A" | "B" | "C" | "D";
@@ -145,7 +145,7 @@ export const CURRICULUM: CurriculumAreaGroup[] = [
       { id: "tech-natural-harmonics", area: "技巧", title: "自然泛音", category: "C" },
       { id: "tech-artificial-harmonics", area: "技巧", title: "人工泛音", category: "C" },
       { id: "tech-string-skipping", area: "技巧", title: "跨弦", category: "C" },
-      { id: "tech-sweep", area: "技巧", title: "掃弦", category: "C" },
+      { id: "tech-sweep", area: "技巧", title: "掃弦（Sweep Picking）", category: "C" },
       { id: "tech-tapping", area: "技巧", title: "點弦", category: "C" },
       { id: "tech-double-stops", area: "技巧", title: "雙音", category: "C" },
       { id: "tech-whammy", area: "技巧", title: "搖桿", category: "C" },
@@ -154,26 +154,26 @@ export const CURRICULUM: CurriculumAreaGroup[] = [
     ],
   },
   {
-    area: "樂句應用",
+    area: "樂句・編曲・器材",
     items: [
-      { id: "licks-major-scale", area: "樂句應用", title: "大調音階licks", category: "D", tool: "/licks" },
-      { id: "licks-minor-scale", area: "樂句應用", title: "小調音階licks", category: "D", tool: "/licks" },
-      { id: "licks-major-pentatonic", area: "樂句應用", title: "大調五聲licks", category: "D", tool: "/licks" },
-      { id: "licks-minor-pentatonic", area: "樂句應用", title: "小調五聲licks", category: "D", tool: "/licks" },
-      { id: "licks-harmonic-minor", area: "樂句應用", title: "和聲小調licks", category: "D" },
-      { id: "licks-melodic-minor", area: "樂句應用", title: "旋律小調licks", category: "D" },
-      { id: "licks-altered", area: "樂句應用", title: "Altered Scale licks", category: "D" },
-      { id: "licks-blues", area: "樂句應用", title: "藍調licks", category: "D", tool: "/licks" },
-      { id: "licks-modal", area: "樂句應用", title: "調式音階licks", category: "D", tool: "/licks" },
-      { id: "licks-arpeggio", area: "樂句應用", title: "琶音licks", category: "D", tool: "/licks" },
-      { id: "gear-tuner-metronome-capo", area: "樂句應用", title: "調音器/節拍器/移調夾使用", category: "C" },
-      { id: "gear-effects", area: "樂句應用", title: "吉他效果器使用", category: "C" },
-      { id: "gear-recording", area: "樂句應用", title: "錄音器材使用", category: "C" },
-      { id: "arr-write-accompaniment", area: "樂句應用", title: "如何編寫伴奏", category: "C" },
-      { id: "arr-make-backing", area: "樂句應用", title: "如何製作Backing", category: "C" },
-      { id: "arr-make-melody", area: "樂句應用", title: "如何製造主旋律", category: "C" },
-      { id: "arr-instrumentation", area: "樂句應用", title: "樂器配置", category: "C" },
-      { id: "arr-write-solo", area: "樂句應用", title: "如何編solo", category: "C" },
+      { id: "licks-major-scale", area: "樂句・編曲・器材", title: "大調音階licks", category: "D", tool: "/licks" },
+      { id: "licks-minor-scale", area: "樂句・編曲・器材", title: "小調音階licks", category: "D", tool: "/licks" },
+      { id: "licks-major-pentatonic", area: "樂句・編曲・器材", title: "大調五聲licks", category: "D", tool: "/licks" },
+      { id: "licks-minor-pentatonic", area: "樂句・編曲・器材", title: "小調五聲licks", category: "D", tool: "/licks" },
+      { id: "licks-harmonic-minor", area: "樂句・編曲・器材", title: "和聲小調licks", category: "D" },
+      { id: "licks-melodic-minor", area: "樂句・編曲・器材", title: "旋律小調licks", category: "D" },
+      { id: "licks-altered", area: "樂句・編曲・器材", title: "Altered Scale licks", category: "D" },
+      { id: "licks-blues", area: "樂句・編曲・器材", title: "藍調licks", category: "D", tool: "/licks" },
+      { id: "licks-modal", area: "樂句・編曲・器材", title: "調式音階licks", category: "D", tool: "/licks" },
+      { id: "licks-arpeggio", area: "樂句・編曲・器材", title: "琶音licks", category: "D", tool: "/licks" },
+      { id: "gear-tuner-metronome-capo", area: "樂句・編曲・器材", title: "調音器/節拍器/移調夾使用", category: "C" },
+      { id: "gear-effects", area: "樂句・編曲・器材", title: "吉他效果器使用", category: "C" },
+      { id: "gear-recording", area: "樂句・編曲・器材", title: "錄音器材使用", category: "C" },
+      { id: "arr-write-accompaniment", area: "樂句・編曲・器材", title: "如何編寫伴奏", category: "C" },
+      { id: "arr-make-backing", area: "樂句・編曲・器材", title: "如何製作Backing", category: "C" },
+      { id: "arr-make-melody", area: "樂句・編曲・器材", title: "如何製造主旋律", category: "C" },
+      { id: "arr-instrumentation", area: "樂句・編曲・器材", title: "樂器配置", category: "C" },
+      { id: "arr-write-solo", area: "樂句・編曲・器材", title: "如何編solo", category: "C" },
     ],
   },
   {

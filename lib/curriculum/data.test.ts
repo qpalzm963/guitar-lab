@@ -17,7 +17,7 @@ const REAL_ROUTES = new Set([
 
 const VALID_CATEGORIES = new Set(["A", "B", "C", "D"]);
 
-const EXPECTED_AREAS = ["音階", "和弦", "節奏訓練", "技巧", "樂句應用", "樂理"];
+const EXPECTED_AREAS = ["音階", "和弦", "節奏訓練", "技巧", "樂句・編曲・器材", "樂理"];
 
 describe("curriculum data integrity", () => {
   it("has exactly the 6 expected areas, in order", () => {
@@ -68,8 +68,10 @@ describe("curriculum data integrity", () => {
     }
   });
 
-  it("TOTAL_ITEMS equals the flattened item count", () => {
+  it("TOTAL_ITEMS equals the flattened item count, and is the headline 111", () => {
     expect(TOTAL_ITEMS).toBe(ALL_ITEMS.length);
-    expect(TOTAL_ITEMS).toBeGreaterThan(0);
+    // The page and README advertise 「111 項」; pin the exact number so an
+    // accidental add/remove (which silently changes the displayed count) fails.
+    expect(TOTAL_ITEMS).toBe(111);
   });
 });
