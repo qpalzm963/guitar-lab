@@ -20,6 +20,7 @@ import {
   chordShapeMarkers,
   inversionMarkers,
   drop2Markers,
+  tritoneSubMarkers,
   DROP2_STRING_SETS,
 } from "@/lib/theory/harmony";
 
@@ -238,17 +239,19 @@ export function HarmonyExplorer() {
             legend: [],
             exportName: "harmony",
           };
-        // Original chord dark, sub chord blue; both projected on the neck.
-        const origMarkers = chordShapeMarkers(tritone.original, {
-          nonRootRole: "scale",
-        });
-        const subMarkers = chordShapeMarkers(tritone.sub, {
-          nonRootRole: "custom",
-        });
         return {
-          markers: [...origMarkers, ...subMarkers],
+          // Original dark, sub blue, and the SHARED tritone drawn once in purple
+          // (not stacked) so the common 3/b7 is actually visible. Roots stay red.
+          markers: tritoneSubMarkers(tritone),
           legend: [
-            { color: "#e11d48", label: `根音` },
+            {
+              color: "#e11d48",
+              label: `根音(${tritone.original.root}/${tritone.sub.root})`,
+            },
+            {
+              color: "#9333ea",
+              label: `共用三全音 ${tritone.sharedTritoneNotes.join("/")}`,
+            },
             { color: "#1f2937", label: `${tritone.original.symbol}(原)` },
             { color: "#2563eb", label: `${tritone.sub.symbol}(代理)` },
           ],
@@ -267,7 +270,7 @@ export function HarmonyExplorer() {
                   {tritone.sharedTritoneNotes.join(" / ")}
                 </span>
                 (彼此的 3 音與 b7 音互換),所以可以互相代理。
-                紅=共同根音層級、深=原和弦、藍=代理和弦。
+                紅=兩和弦各自的根音、紫=兩者共用的三全音、深=原和弦其餘音、藍=代理和弦其餘音。
               </p>
             </>
           ),
@@ -569,7 +572,14 @@ export function HarmonyExplorer() {
       {legend.length > 0 && <Legend entries={legend} />}
 
       <ScrollableBoard ref={boardRef}>
-        <Fretboard markers={markers} labelMode={labels} toFret={15} />
+        <Fretboard
+          markers={markers}
+          labelMode={labels}
+          toFret={15}
+          ariaLabel={`${
+            CONCEPTS.find((c) => c.id === concept)?.label ?? "進階和聲"
+          }指板圖`}
+        />
       </ScrollableBoard>
 
       <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm leading-relaxed">

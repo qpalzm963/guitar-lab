@@ -38,6 +38,18 @@ function shapeOf(symbol: string): ChordShape {
   };
 }
 
+/**
+ * Prefer a single-accidental spelling for a DISPLAYED chord root. Transposing by
+ * interval can yield double accidentals that are theoretically correct but
+ * teaching-hostile: the tritone sub of Db7 spells "Abb7", and bVI of Db spells
+ * "Bbb" — no real chart writes those. The chroma is unchanged, so simplifying to
+ * the enharmonic single-accidental (Abb→G, Bbb→A) changes only what the learner
+ * reads. Single-accidental spellings (Cb, Fb) are left as-is — they're valid.
+ */
+function simpleRoot(pc: string): string {
+  return /bb|##/.test(pc) ? Note.enharmonic(pc) : pc;
+}
+
 // ---------------------------------------------------------------------------
 // 1. Secondary dominants — V7 of each diatonic target (skip I and vii°).
 // ---------------------------------------------------------------------------
@@ -122,7 +134,7 @@ const BORROWED: { label: string; ivl: string; quality: string }[] = [
  */
 export function borrowedChords(key: string): BorrowedChord[] {
   return BORROWED.map((b) => {
-    const root = Note.pitchClass(Note.transpose(key, b.ivl));
+    const root = simpleRoot(Note.pitchClass(Note.transpose(key, b.ivl)));
     return { label: b.label, chord: shapeOf(`${root}${b.quality}`) };
   });
 }
@@ -161,7 +173,7 @@ export function tritoneSub(chordSymbol: string): TritoneSubstitution | null {
   const ivls = orig.intervals.join(" ");
   if (ivls !== "1P 3M 5P 7m") return null;
 
-  const subRoot = Note.pitchClass(Note.transpose(orig.tonic, "5d"));
+  const subRoot = simpleRoot(Note.pitchClass(Note.transpose(orig.tonic, "5d")));
   const sub = shapeOf(`${subRoot}7`);
 
   // The shared tritone is the original's 3rd (3M) and 7th (7m).
@@ -304,6 +316,37 @@ function applyDrop2(close: string[]): string[] {
 }
 
 /**
+ * Shift a whole voicing by octaves so every note lands on the rendered board
+ * (frets 0..maxFret). closeVoicing builds the stack at octave 4, which only sits
+ * in range for the high (1-4) string set; on the 2-5 and 3-6 sets the identical
+ * pitches map to frets past the neck and the Fretboard silently drops them,
+ * leaving a partial or empty diagram. Moving the WHOLE voicing down by 12
+ * semitones preserves the drop-2 shape and the string assignments — only the
+ * register changes — and lowers every fret by 12. We only ever shift DOWN
+ * because the octave-4 stack is always above the board.
+ */
+function fitVoicingToBoard(
+  voiced: VoicedNote[],
+  maxFret: number,
+): VoicedNote[] {
+  if (voiced.length === 0) return voiced;
+  const frets = voiced.map((v) => v.fret);
+  const rawMax = Math.max(...frets);
+  const rawMin = Math.min(...frets);
+  let shiftOct = rawMax > maxFret ? Math.ceil((rawMax - maxFret) / 12) : 0;
+  // Defensive: never push the lowest note below the nut. The small fret span of
+  // an adjacent-string drop-2 voicing means a single octave shift always fits,
+  // but this keeps every fret valid even if a future chord widened the span.
+  while (shiftOct > 0 && rawMin - 12 * shiftOct < 0) shiftOct -= 1;
+  if (shiftOct === 0) return voiced;
+  return voiced.map((v) => ({
+    ...v,
+    fret: v.fret - 12 * shiftOct,
+    octave: v.octave - shiftOct,
+  }));
+}
+
+/**
  * Drop-2 voicings of a 4-note (7th) chord on one string set, all 4 inversions.
  *
  * tonal has no drop-2 dictionary, so we compute it (the spec's instruction):
@@ -321,6 +364,7 @@ function applyDrop2(close: string[]): string[] {
 export function drop2Voicings(
   chordSymbol: string,
   stringSetId: string = DROP2_STRING_SETS[0].id,
+  maxFret: number = DEFAULT_FRET_COUNT,
 ): DropTwoVoicing[] {
   const c = Chord.get(chordSymbol);
   if (c.empty || c.notes.length !== 4) return [];
@@ -338,7 +382,7 @@ export function drop2Voicings(
   return [0, 1, 2, 3].map((inv) => {
     const close = closeVoicing(tones, inv, 4);
     const voicing = applyDrop2(close); // 4 notes, low → high
-    const voiced: VoicedNote[] = voicing.map((note, k) => {
+    const placed: VoicedNote[] = voicing.map((note, k) => {
       // Lowest note → lowest string in the set (highest string index).
       const stringIdx = set.topStringIdx + (voicing.length - 1) - k;
       const open = STANDARD_TUNING[stringIdx];
@@ -354,6 +398,9 @@ export function drop2Voicings(
         isRoot: chroma === rootChroma,
       };
     });
+    // Anchor the voicing onto the rendered board so all 4 notes stay visible
+    // (the octave-4 stack runs off the neck on the lower string sets).
+    const voiced = fitVoicingToBoard(placed, maxFret);
     return {
       inversion: inv,
       label: INV_LABELS[inv] ?? `第${inv}轉位`,
@@ -436,9 +483,13 @@ export function inversionMarkers(inv: Inversion, opts: ProjectOpts = {}): Marker
     root: Note.pitchClass(inv.notes[0]),
   };
   const bassChroma = Note.chroma(inv.bass);
+  // Mark every occurrence of the bass pitch class with the reference (gray) role
+  // so the learner sees WHICH note is the bass — but DON'T set a "(低音)" label:
+  // across the whole neck that cluttered the board and hid the note name. The gray
+  // colour + the legend ("灰 = 低音") carry the meaning; the explanation names it.
   return chordShapeMarkers(shape, opts).map((m) =>
     Note.chroma(m.pitchClass) === bassChroma
-      ? { ...m, role: "reference" as const, label: `${m.pitchClass}(低音)` }
+      ? { ...m, role: "reference" as const }
       : m,
   );
 }
@@ -458,7 +509,36 @@ export function drop2Markers(voicing: DropTwoVoicing): Marker[] {
       octave: v.octave,
       degree: v.degree,
       role: v.isBass ? ("reference" as const) : v.isRoot ? ("root" as const) : ("scale" as const),
-      label: v.isBass ? `${v.pitchClass}(低音)` : undefined,
+      // Bass = gray (reference) role; no "(低音)" label — the legend conveys it, so
+      // the circle shows its note/degree like the others (consistent with inversions).
       isRoot: v.isRoot,
     }));
+}
+
+/**
+ * Markers for the tritone-substitution overlay. The original chord (dark) and its
+ * sub (blue) are projected together, BUT the SHARED tritone — the two chords'
+ * common 3rd/7th — is drawn ONCE in a distinct "shared" role (purple) rather than
+ * stacking a dark and a blue marker at the same fret (where the blue would hide
+ * the dark and the lesson "they share a tritone" would be invisible). Each root
+ * stays red. So a cell is purple iff its pitch class is one of the shared tritone
+ * tones (and it isn't a root).
+ */
+export function tritoneSubMarkers(
+  t: TritoneSubstitution,
+  opts: ProjectOpts = {},
+): Marker[] {
+  const sharedChromas = new Set(t.sharedTritoneChromas);
+  const isShared = (m: Marker) => {
+    const ch = Note.chroma(m.pitchClass);
+    return !m.isRoot && ch != null && sharedChromas.has(ch);
+  };
+  const orig = chordShapeMarkers(t.original, { ...opts, nonRootRole: "scale" });
+  const sub = chordShapeMarkers(t.sub, { ...opts, nonRootRole: "custom" });
+  return [
+    // Tag the shared tritone tones on the original layer as "shared" (purple)…
+    ...orig.map((m) => (isShared(m) ? { ...m, role: "shared" as const } : m)),
+    // …and drop them from the sub layer so each shared position is drawn once.
+    ...sub.filter((m) => !isShared(m)),
+  ];
 }

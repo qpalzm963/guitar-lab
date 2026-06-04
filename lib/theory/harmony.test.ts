@@ -5,8 +5,10 @@ import {
   borrowedChords,
   tritoneSub,
   inversions,
+  inversionMarkers,
   drop2Voicings,
   drop2Markers,
+  tritoneSubMarkers,
   DROP2_STRING_SETS,
 } from "./harmony";
 
@@ -199,11 +201,14 @@ describe("drop2Voicings (Cmaj7)", () => {
   it("the 4 inversions cycle the bass through 5th, 7th, root, 3rd", () => {
     expect(v.map((x) => x.bassDegree)).toEqual(["5", "7", "1", "3"]);
   });
-  it("renders the bass note as the reference role with a 低音 label", () => {
+  it("marks the bass note with the reference (gray) role and NO inline label", () => {
+    // The bass is shown by the gray role + the legend, not a per-circle "(低音)"
+    // label (which cluttered the whole-neck inversion view). Markers fall back to
+    // their note/degree like every other marker.
     const markers = drop2Markers(v[0]);
     const bassMarkers = markers.filter((m) => m.role === "reference");
     expect(bassMarkers.length).toBeGreaterThan(0);
-    for (const m of bassMarkers) expect(m.label).toContain("低音");
+    for (const m of bassMarkers) expect(m.label).toBeUndefined();
   });
   it("returns [] for a non-4-note chord (drop-2 needs a 7th chord)", () => {
     expect(drop2Voicings("C")).toEqual([]); // triad
@@ -218,5 +223,135 @@ describe("drop2Voicings (Cmaj7)", () => {
         );
       }
     }
+  });
+});
+
+describe("drop2Voicings stay on the rendered board (off-neck fix)", () => {
+  const MAX_FRET = 15; // the toFret the HarmonyExplorer/Fretboard renders
+  // One chord per offered 7th-chord quality, across natural / flat / sharp roots.
+  const CHORDS = ["Cmaj7", "G7", "Am7", "Dm7b5", "Bdim7", "Ebmaj7", "F#7"];
+
+  it("places all 4 notes within 0..15 on every string set and inversion", () => {
+    // The shipped bug: closeVoicing's hard-coded octave 4 pushed most voicings
+    // past fret 15, so the Fretboard's fret<=15 filter rendered a partial or
+    // EMPTY board (≈33% blank) while the UI still claimed a 4-note voicing and
+    // kept export enabled. fitVoicingToBoard must keep all 4 notes on the neck.
+    for (const chord of CHORDS) {
+      for (const set of DROP2_STRING_SETS) {
+        const voicings = drop2Voicings(chord, set.id, MAX_FRET);
+        expect(voicings.length).toBeGreaterThan(0);
+        for (const voicing of voicings) {
+          expect(voicing.voiced).toHaveLength(4);
+          for (const n of voicing.voiced) {
+            expect(
+              n.fret,
+              `${chord} ${set.id} inv${voicing.inversion}: fret ${n.fret} off-board`,
+            ).toBeGreaterThanOrEqual(0);
+            expect(n.fret).toBeLessThanOrEqual(MAX_FRET);
+          }
+          // So drop2Markers (which drops only fret<0) emits all 4 — never blank.
+          expect(drop2Markers(voicing)).toHaveLength(4);
+        }
+      }
+    }
+  });
+
+  it("keeps the canonical 1-4 inv0 reference (no needless shift when it fits)", () => {
+    const inv0 = drop2Voicings("Cmaj7", "1-4", MAX_FRET)[0];
+    expect(inv0.voiced.map((n) => n.fret)).toEqual([5, 5, 5, 7]);
+    expect(inv0.voiced.map((n) => `${n.pitchClass}${n.octave}`)).toEqual([
+      "G3",
+      "C4",
+      "E4",
+      "B4",
+    ]);
+  });
+});
+
+describe("harmony spelling — no teaching-hostile double accidentals", () => {
+  const DOM7_ROOTS = [
+    "C", "Db", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B",
+  ];
+
+  it("tritone sub of Db7 is G7, not Abb7", () => {
+    // Db transposed by 5d is Abb — correct but teaching-hostile. The displayed sub
+    // must simplify to its single-accidental enharmonic, G7 (a tritone from Db).
+    const sub = tritoneSub("Db7");
+    expect(sub).not.toBeNull();
+    expect(sub!.sub.symbol).toBe("G7");
+    expect(sub!.sub.root).toBe("G");
+  });
+
+  it("keeps the canonical G7 → Db7 sub (single accidentals are left alone)", () => {
+    expect(tritoneSub("G7")!.sub.symbol).toBe("Db7");
+  });
+
+  it("no dominant-7th root produces a tritone-sub symbol with a double accidental", () => {
+    for (const r of DOM7_ROOTS) {
+      const sub = tritoneSub(`${r}7`);
+      expect(sub, `${r}7`).not.toBeNull();
+      expect(sub!.sub.symbol, `sub of ${r}7`).not.toMatch(/bb|##/);
+    }
+  });
+
+  it("borrowed chords for the Db key avoid double-flat roots (bVI Bbb → A)", () => {
+    // Db is the picker key that previously surfaced bVI = Bbb. Each borrowed chord
+    // SYMBOL must read with at most one accidental.
+    for (const b of borrowedChords("Db")) {
+      expect(b.chord.symbol, `${b.label} = ${b.chord.symbol}`).not.toMatch(
+        /bb|##/,
+      );
+    }
+  });
+});
+
+describe("tritoneSubMarkers (shared tritone drawn once, not stacked)", () => {
+  it("tags the shared tritone tones as the 'shared' role, never a root", () => {
+    const t = tritoneSub("G7")!; // G7 ↔ Db7; shared tritone = B & F
+    const markers = tritoneSubMarkers(t);
+    const sharedChromas = new Set(t.sharedTritoneChromas);
+    const shared = markers.filter((m) => m.role === "shared");
+    expect(shared.length).toBeGreaterThan(0);
+    for (const m of shared) {
+      expect(sharedChromas.has(Note.chroma(m.pitchClass)!)).toBe(true);
+      expect(m.isRoot).toBe(false);
+    }
+  });
+
+  it("draws each cell once — the shared tritone is NOT stacked (the fix)", () => {
+    // The bug stacked a dark (orig) and a blue (sub) marker at every shared-tritone
+    // cell; the blue hid the dark and the "shared" lesson was invisible. Now each
+    // (string,fret) holds exactly one marker.
+    const markers = tritoneSubMarkers(tritoneSub("G7")!);
+    const cells = markers.map((m) => `${m.string}:${m.fret}`);
+    expect(new Set(cells).size).toBe(cells.length);
+  });
+
+  it("keeps both chord roots red (role 'root')", () => {
+    const markers = tritoneSubMarkers(tritoneSub("G7")!);
+    const roots = markers.filter((m) => m.isRoot);
+    expect(roots.length).toBeGreaterThan(0);
+    for (const m of roots) expect(m.role).toBe("root");
+    const rootChromas = new Set(roots.map((m) => Note.chroma(m.pitchClass)));
+    expect(rootChromas.has(Note.chroma("G"))).toBe(true); // original root
+    expect(rootChromas.has(Note.chroma("Db"))).toBe(true); // sub root
+  });
+});
+
+describe("inversionMarkers (bass shown gray, no cramped '(低音)' label)", () => {
+  it("tags every bass-pitch-class marker as reference/gray with no label", () => {
+    // First inversion of Cmaj7 → bass E. Every E on the neck is gray (reference)
+    // so the learner sees which note is the bass, but carries no "(低音)" text
+    // (the legend conveys that) — it shows its note/degree like the rest.
+    const firstInv = inversions("Cmaj7").find((i) => i.bass === "E")!;
+    const markers = inversionMarkers(firstInv);
+    const bass = markers.filter((m) => m.role === "reference");
+    expect(bass.length).toBeGreaterThan(0);
+    for (const m of bass) {
+      expect(Note.chroma(m.pitchClass)).toBe(Note.chroma("E"));
+      expect(m.label).toBeUndefined();
+    }
+    // No marker carries a "(低音)" label anymore.
+    expect(markers.every((m) => m.label === undefined)).toBe(true);
   });
 });

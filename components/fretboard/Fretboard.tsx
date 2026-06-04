@@ -7,6 +7,7 @@ const ROLE_FILL: Record<NoteRole, string> = {
   scale: "#1f2937", // near-black
   reference: "#9ca3af", // gray
   custom: "#2563eb", // blue
+  shared: "#9333ea", // purple (e.g. the shared tritone in the tritone-sub view)
 };
 
 const INLAY_SINGLE = [3, 5, 7, 9, 15, 17, 19, 21];
@@ -25,6 +26,12 @@ export interface FretboardProps {
    * Omitted by default, so existing read-only usages are unaffected.
    */
   onCellClick?: (string: number, fret: number) => void;
+  /**
+   * Accessible name for the SVG (role=img). Defaults to a generic zh-TW label; a
+   * caller can pass a descriptive one (e.g. "C 大調音階指板圖") so screen-reader
+   * users learn the diagram's actual content, which is otherwise purely visual.
+   */
+  ariaLabel?: string;
 }
 
 // Dumb SVG renderer. Receives a marker list; never computes theory.
@@ -36,6 +43,7 @@ export function Fretboard({
   labelMode = "name",
   positionHighlight = null,
   onCellClick,
+  ariaLabel = "吉他指板圖",
 }: FretboardProps) {
   const strings = tuning.length;
   const padL = 56;
@@ -72,7 +80,7 @@ export function Fretboard({
           "ui-sans-serif, system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif",
       }}
       role="img"
-      aria-label="guitar fretboard diagram"
+      aria-label={ariaLabel}
     >
       <rect x={0} y={0} width={width} height={height} fill="#ffffff" />
 

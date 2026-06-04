@@ -3,7 +3,7 @@
 // Shapes (scale / CAGED / arpeggio) are generators that output Marker[];
 // the rendering component stays dumb and never computes theory itself.
 
-export type NoteRole = "root" | "scale" | "reference" | "custom";
+export type NoteRole = "root" | "scale" | "reference" | "custom" | "shared";
 
 export interface Marker {
   /** String index. 0 = string 1 (high E, top row). 5 = string 6 (low E, bottom). */
