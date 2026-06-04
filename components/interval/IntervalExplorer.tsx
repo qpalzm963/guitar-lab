@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Fretboard } from "@/components/fretboard/Fretboard";
 import { intervalMarkers, INTERVALS, QUIZ_INTERVALS } from "@/lib/theory/intervals";
 import { downloadSvgAsPng } from "@/lib/export/svgToPng";
@@ -11,12 +11,26 @@ import { ToggleButton } from "@/components/ui/ToggleButton";
 import { Field, FieldGroup, Select } from "@/components/ui/Field";
 import { ScrollableBoard } from "@/components/ui/ScrollableBoard";
 import { useInitialParams, pickAllowed } from "@/lib/url/useInitialParams";
+import {
+  NotePlayer,
+  intervalNotes,
+  type PlayMode,
+} from "@/lib/audio/notePlayer";
 
 // Interval tool keeps name/級數 only; an interval board without labels conveys
 // little (same rationale as the chord tool). Local state — no persisted store.
 const LABELS: { id: LabelMode; label: string }[] = [
   { id: "name", label: "音名" },
   { id: "degree", label: "級數" },
+];
+
+// Play-mode toggles for the audio playback (root→interval ascending, the reverse,
+// or both notes at once). Shared by both modes so the learner's chosen order
+// carries between 參考 and 視覺測驗.
+const PLAY_MODES: { id: PlayMode; label: string }[] = [
+  { id: "ascending", label: "上行" },
+  { id: "descending", label: "下行" },
+  { id: "together", label: "同時" },
 ];
 
 // Modes: 參考 (reference visualizer) and 視覺測驗 (no-audio multiple-choice quiz).
@@ -70,6 +84,52 @@ function normalizeIntervalParam(value: string): string {
 
 export function IntervalExplorer() {
   const [mode, setMode] = useState<Mode>("reference");
+
+  // --- audio (shared by both modes) ---
+  // Lazy-init the Tone.js-backed player on first play click (inside the user
+  // gesture); dispose on unmount. Mirrors Drone's lifecycle. playMode (上行/下行/
+  // 同時) is shared so the chosen note order carries between 參考 and 視覺測驗.
+  const playerRef = useRef<NotePlayer | null>(null);
+  const [playMode, setPlayMode] = useState<PlayMode>("ascending");
+  // Gate quiz auto-play behind a real user gesture: browsers block audio that
+  // starts before one (it would throw). Flipped true on the first manual play.
+  const playedOnceRef = useRef(false);
+  const [audioError, setAudioError] = useState<string | null>(null);
+
+  useEffect(() => {
+    return () => {
+      void playerRef.current?.dispose();
+      playerRef.current = null;
+    };
+  }, []);
+
+  function play(noteRoot: string, intervalId: string) {
+    if (!playerRef.current) playerRef.current = new NotePlayer();
+    playedOnceRef.current = true;
+    // Surface a blocked AudioContext (autoplay policy / iOS) instead of letting
+    // the rejected promise go unhandled and failing silently.
+    playerRef.current
+      .playNotes(intervalNotes(noteRoot, intervalId), playMode)
+      .then(() => setAudioError(null))
+      .catch(() => setAudioError("無法播放音訊,請先點擊頁面再試一次。"));
+  }
+
+  // The play-mode toggle row, rendered in both modes.
+  const playModeControl = (
+    <FieldGroup label="播放方式">
+      <div className="flex gap-1">
+        {PLAY_MODES.map((m) => (
+          <ToggleButton
+            key={m.id}
+            active={playMode === m.id}
+            onClick={() => setPlayMode(m.id)}
+          >
+            {m.label}
+          </ToggleButton>
+        ))}
+      </div>
+    </FieldGroup>
+  );
 
   // --- reference mode state ---
   const [root, setRoot] = useState("C");
@@ -127,8 +187,13 @@ export function IntervalExplorer() {
   }
 
   function nextRound() {
-    setRound(newRound());
+    const next = newRound();
+    setRound(next);
     setPicked(null);
+    // Auto-play the new round's interval — but ONLY once the user has played at
+    // least once, so audio never starts without a prior gesture (browsers block
+    // that and it errors). The first round on mount therefore stays silent.
+    if (playedOnceRef.current) play(next.root, next.answerId);
   }
 
   function resetQuiz() {
@@ -179,6 +244,12 @@ export function IntervalExplorer() {
         </ToggleButton>
       </div>
 
+      {audioError && (
+        <p className="text-sm text-rose-600" role="alert">
+          {audioError}
+        </p>
+      )}
+
       {mode === "reference" ? (
         <>
           <div className="flex flex-wrap items-end gap-6">
@@ -220,6 +291,10 @@ export function IntervalExplorer() {
               </div>
             </FieldGroup>
 
+            {playModeControl}
+
+            <Button onClick={() => play(root, interval)}>▶ 播放</Button>
+
             <Button variant="secondary" onClick={exportPng} disabled={busy}>
               {busy ? "匯出中…" : "匯出 PNG"}
             </Button>
@@ -246,10 +321,15 @@ export function IntervalExplorer() {
             <span className="text-sm text-gray-500">
               得分 {score}/{total}
             </span>
+            <Button onClick={() => play(round.root, round.answerId)}>
+              ▶ 播放此音程
+            </Button>
             <Button variant="ghost" onClick={resetQuiz}>
               重設
             </Button>
           </div>
+
+          <div className="flex flex-wrap items-end gap-6">{playModeControl}</div>
 
           {legend}
 
