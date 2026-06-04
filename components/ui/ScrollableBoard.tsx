@@ -12,12 +12,15 @@ export const ScrollableBoard = forwardRef<
 >(function ScrollableBoard({ children, className }, ref) {
   return (
     <div>
-      <p className="mb-1 text-center text-xs text-gray-400 sm:hidden">
+      <p className="mb-1 text-center text-xs text-gray-500 sm:hidden">
         ← 左右滑動查看完整指板 →
       </p>
       <div
         ref={ref}
-        className={`overflow-x-auto rounded-lg border border-gray-200 bg-white p-4${
+        tabIndex={0}
+        role="group"
+        aria-label="指板,可左右捲動查看"
+        className={`overflow-x-auto rounded-lg border border-gray-200 bg-white p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-1${
           className ? ` ${className}` : ""
         }`}
       >

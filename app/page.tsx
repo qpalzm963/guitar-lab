@@ -94,12 +94,19 @@ const GROUPS: Group[] = [
 
 export default function Home() {
   return (
-    <main className="mx-auto w-full max-w-6xl flex-1 p-6">
-      <section className="py-8">
+    <main
+      id="main-content"
+      tabIndex={-1}
+      className="mx-auto w-full max-w-6xl flex-1 p-6 focus:outline-none"
+    >
+      <section aria-labelledby="hero-heading" className="py-8">
         <p className="text-xs font-medium uppercase tracking-wide text-rose-600">
           guitar-lab
         </p>
-        <h1 className="mt-1 text-3xl font-semibold tracking-tight text-gray-900">
+        <h1
+          id="hero-heading"
+          className="mt-1 text-3xl font-semibold tracking-tight text-gray-900"
+        >
           把吉他樂理變成看得見、可練習的工具
         </h1>
         <p className="mt-2 max-w-2xl text-gray-600">
@@ -112,8 +119,14 @@ export default function Home() {
 
       <div className="space-y-10 pb-12">
         {GROUPS.map((group) => (
-          <section key={group.heading}>
-            <h2 className="mb-3 text-lg font-semibold text-gray-900">
+          <section
+            key={group.heading}
+            aria-labelledby={`sec-${group.heading}`}
+          >
+            <h2
+              id={`sec-${group.heading}`}
+              className="mb-3 text-lg font-semibold text-gray-900"
+            >
               {group.heading}
             </h2>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

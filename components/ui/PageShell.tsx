@@ -26,7 +26,11 @@ export function PageShell({
   children: ReactNode;
 }) {
   return (
-    <main className={`mx-auto w-full ${WIDTHS[width]} p-6`}>
+    <main
+      id="main-content"
+      tabIndex={-1}
+      className={`mx-auto w-full ${WIDTHS[width]} p-6 focus:outline-none`}
+    >
       <header className="mb-6">
         {eyebrow ? (
           <p className="text-xs font-medium uppercase tracking-wide text-rose-600">

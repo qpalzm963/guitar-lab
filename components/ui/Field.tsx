@@ -1,4 +1,4 @@
-import type { ReactNode, SelectHTMLAttributes } from "react";
+import { useId, type ReactNode, type SelectHTMLAttributes } from "react";
 
 // Labeled control wrapper: a vertical <label> with a muted caption above its
 // control. Replaces the repeated
@@ -35,9 +35,19 @@ export function FieldGroup({
   children: ReactNode;
   className?: string;
 }) {
+  const labelId = useId();
   return (
-    <div className={`flex flex-col gap-1 text-sm ${className}`.trim()}>
-      <span className="text-sm text-gray-500">{label}</span>
+    // role=group + aria-labelledby so a screen reader announces the caption (e.g.
+    // "把位") as the name of the button row — a bare <span> caption is not
+    // programmatically tied to the toggles inside.
+    <div
+      role="group"
+      aria-labelledby={labelId}
+      className={`flex flex-col gap-1 text-sm ${className}`.trim()}
+    >
+      <span id={labelId} className="text-sm text-gray-500">
+        {label}
+      </span>
       {children}
     </div>
   );
