@@ -12,6 +12,16 @@ type GainLike = {
   dispose: () => void;
 };
 
+// Synth voicing for the drone. A `triangle` wave (soft, odd harmonics that roll
+// off fast) gives a clean, organ-like reference tone. A `sawtooth` (every
+// harmonic) sounded buzzy/harsh for a sustained tuning tone; triangle also stays
+// audible at low octaves (A2 ≈ 110 Hz) where a pure sine nearly vanishes on
+// laptop/phone speakers. Exported so the waveform choice is unit-testable.
+export const DRONE_SYNTH_OPTIONS = {
+  oscillator: { type: "triangle" as const },
+  envelope: { attack: 0.05, decay: 0.1, sustain: 0.8, release: 0.3 },
+};
+
 /**
  * Holds one note on/off. start() awaits Tone.start() (MUST be in a user gesture)
  * and triggers a sustained note; stop() releases it; dispose() tears everything
@@ -37,10 +47,7 @@ export class DroneEngine {
       // InputNode), then stash behind the minimal structural types for the rest
       // of the class so the pure-import boundary stays clean.
       const gain = new Tone.Gain(0.2).toDestination();
-      const synth = new Tone.Synth({
-        oscillator: { type: "sawtooth" },
-        envelope: { attack: 0.05, decay: 0.1, sustain: 0.8, release: 0.3 },
-      }).connect(gain);
+      const synth = new Tone.Synth(DRONE_SYNTH_OPTIONS).connect(gain);
       this.gain = gain as unknown as GainLike;
       this.synth = synth as unknown as SynthLike;
     }
