@@ -5,7 +5,7 @@ import { LessonView } from "@/components/course/LessonView";
 import { PageShell } from "@/components/ui/PageShell";
 
 // Static export: the lesson slugs are known at build time, so generateStaticParams
-// enumerates all five and Next prerenders course/<slug>.html for each. No runtime
+// enumerates all six and Next prerenders course/<slug>.html for each. No runtime
 // params are possible in an `output: 'export'` build, which is exactly what we
 // want — the route is fully static.
 export function generateStaticParams() {
@@ -34,7 +34,7 @@ export default async function LessonPage({
 }) {
   const { lesson: slug } = await params;
   const lesson = getLesson(slug);
-  // Defensive: with generateStaticParams + export this only renders for the five
+  // Defensive: with generateStaticParams + export this only renders for the six
   // known slugs, but guard anyway so a stray param 404s instead of crashing.
   if (!lesson) notFound();
 
