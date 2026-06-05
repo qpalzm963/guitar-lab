@@ -86,12 +86,22 @@ describe("filterLicks two-axis filter", () => {
     expect(got.every((l) => l.style === style)).toBe(true);
   });
 
-  it("returns a real empty array when no lick matches both axes", () => {
-    // The viewer's empty-state path depends on a true [] (not undefined/null).
-    // minor-pentatonic licks are Blues/Rock only, so × Jazz yields nothing.
-    const got = filterLicks("minor-pentatonic", "Jazz");
-    expect(Array.isArray(got)).toBe(true);
-    expect(got).toHaveLength(0);
+  it("returns a real array for every combo, and the grid is complete", () => {
+    // The grid is intentionally full now — one lick per scale × style, so no
+    // valid combo is empty. filterLicks still returns a real array (it's a
+    // .filter, never undefined/null), so the viewer's empty-state fallback stays
+    // defensive in case a lick is later removed. This also guards completeness:
+    // a hole (some combo dropping to 0) would fail here.
+    for (const s of SCALES) {
+      for (const st of STYLES) {
+        const got = filterLicks(s.id, st.id);
+        expect(Array.isArray(got)).toBe(true);
+        expect(
+          got.length,
+          `no lick for ${s.id} × ${st.id}`,
+        ).toBeGreaterThanOrEqual(1);
+      }
+    }
   });
 
   it("both axes intersect (AND, not OR)", () => {
