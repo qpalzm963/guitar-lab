@@ -206,3 +206,51 @@ describe("lick notes match the labeled scale (theory correctness)", () => {
     }
   });
 });
+
+// --- teacher review: rhythm fills whole bars + blues licks use the blue note ---
+// Beats from an alphaTex: strip {effects}, then add 4/N beats per note/rest after
+// each :N duration token. A total that isn't a multiple of 4 auto-bars into a
+// lopsided stray measure (no \ts is set), warping a learner's sense of time.
+function lickBeats(alphaTex: string): number {
+  const clean = alphaTex.replace(/\{[^}]*\}/g, " ");
+  let dur = 1;
+  let beats = 0;
+  for (const tok of clean.split(/\s+/)) {
+    if (!tok) continue;
+    const m = tok.match(/^:(\d+)$/);
+    if (m) {
+      dur = 4 / Number(m[1]);
+      continue;
+    }
+    if (/^r/.test(tok) || /^\d+\.[1-6]/.test(tok)) beats += dur;
+  }
+  return beats;
+}
+
+describe("rhythm and blue-note (teacher review)", () => {
+  it("every lick fills whole 4/4 bars", () => {
+    // WHY: no time signature is set, so alphaTab renders 4/4 and auto-bars; a
+    // total that isn't a multiple of 4 leaves a ragged partial measure — bad
+    // rhythmic modelling for a learner. Every lick must sum to whole bars.
+    for (const l of LICKS) {
+      const beats = lickBeats(l.alphaTex);
+      const msg = `${l.id} totals ${beats} beats (not whole 4/4 bars)`;
+      expect(beats, msg).toBeGreaterThan(0);
+      expect(beats % 4, msg).toBe(0);
+    }
+  });
+
+  it("every blues-scale lick actually plays its b5 blue note", () => {
+    // WHY: the b5 is the note that makes the blues scale the blues. A lick tagged
+    // with the blues scale that never sounds its b5 isn't teaching the scale's
+    // defining colour (minor-pentatonic/dorian licks are exempt — their scales
+    // have no b5; the bend is their idiom instead).
+    for (const l of LICKS) {
+      if (l.scale !== "blues") continue;
+      const root = Note.chroma(l.key.replace(/m$/, ""))!;
+      const flatFive = (root + 6) % 12;
+      const hasBlue = lickNoteChromas(l.alphaTex).includes(flatFive);
+      expect(hasBlue, `${l.id} (${l.key} blues) never plays its b5`).toBe(true);
+    }
+  });
+});

@@ -59,10 +59,14 @@ export interface Lick {
   alphaTex: string;
 }
 
-// Note: ids encode scale+style so they read clearly in the curriculum links and
-// stay unique. Each alphaTex repeats \tempo so the embedded score tempo matches
-// the `tempo` field (the AlphaTabPlayer speed control scales this reference).
+// One lick per scale × style cell (25 total). Each is original and curated to a
+// teacher's standard: every note sits in the labeled scale unless flagged
+// hasChromatic (honest), each alphaTex sums to whole 4/4 bars and parses in
+// alphaTab, and the line is idiomatic for its style (jazz uses guide-tone
+// enclosures, pop resolves by step, funk is syncopated, blues bends/blue-notes).
+// ids encode scale+style so they stay unique and read clearly in curriculum links.
 export const LICKS: Lick[] = [
+  // --- minor-pentatonic ---
   {
     id: "minor-pentatonic-blues",
     title: "A 小調五聲藍調樂句",
@@ -71,9 +75,7 @@ export const LICKS: Lick[] = [
     key: "Am",
     difficulty: "初級",
     tempo: 80,
-    // Fix: 7.2 (B-string fret 7 = F#) is OUTSIDE A minor pentatonic; the box-1
-    // B-string note is fret 8 (= G). Was 7.2, now 8.2.
-    alphaTex: "\\tempo 80 . :8 5.1 8.1 8.2 5.2 7.3 5.3 7.4 5.4 | :4 7.5 5.5 :2 5.6",
+    alphaTex: "\\tempo 80 . :8 5.1 8.1 8.2{b (0 4)} 5.2 7.3 5.3 7.4 5.4 | :4 7.5 5.5 :2 5.6",
   },
   {
     id: "minor-pentatonic-rock",
@@ -83,111 +85,8 @@ export const LICKS: Lick[] = [
     key: "Am",
     difficulty: "中級",
     tempo: 110,
-    alphaTex:
-      // Fix: both 7.2 (F#) → 8.2 (G), the in-scale box-1 B-string note (F# is
-      // not in A minor pentatonic).
-      "\\tempo 110 . :8 8.1{b (0 4)} 5.1 8.2 5.2 | 8.2 5.2 :4 7.3 :2 5.3",
+    alphaTex: "\\tempo 110 . :8 8.2{b (0 4)} 8.2 5.2 8.1 5.1 8.2 5.2 8.1 | :8 5.1 8.2 5.2 7.3 :2 5.3",
   },
-  {
-    id: "major-pentatonic-pop",
-    title: "G 大調五聲流行樂句",
-    scale: "major-pentatonic",
-    style: "Pop",
-    key: "G",
-    difficulty: "初級",
-    tempo: 96,
-    // Fix: 2.2 (C#) and 5.3 (C) are NOT in G major pentatonic (G A B D E). Kept
-    // every original string assignment, corrected only the 3 out-of-scale frets:
-    // 2.2→0.2 (B), 5.3→7.3 (D), final 2.2→3.2 (D). Now: G A B D E B | D D.
-    alphaTex: "\\tempo 96 . :8 3.1 5.1 0.2 3.2 5.2 4.3 :4 7.3 3.2",
-  },
-  {
-    id: "major-pentatonic-funk",
-    title: "E 大調五聲放克切音",
-    scale: "major-pentatonic",
-    style: "Funk",
-    key: "E",
-    difficulty: "中級",
-    tempo: 100,
-    alphaTex: "\\tempo 100 . :16 9.3 11.3 9.3 r :8 9.4 11.4 :4 9.3 r.4",
-  },
-  {
-    id: "blues-blues",
-    title: "A 藍調音階經典句",
-    scale: "blues",
-    style: "Blues",
-    key: "A",
-    difficulty: "中級",
-    tempo: 72,
-    // 6.2 (F) and 7.2 (F#) are chromatic passing tones walking E→F→F# — a blues
-    // idiom, not A blues scale tones. Kept, and flagged so the UI says so.
-    hasChromatic: true,
-    alphaTex: "\\tempo 72 . :8 5.1 8.1{b (0 4)} 5.2 6.2 7.2 5.3 :4 7.4 5.4",
-  },
-  {
-    id: "blues-rock",
-    title: "E 藍調搖滾樂句",
-    scale: "blues",
-    style: "Rock",
-    key: "E",
-    difficulty: "進階",
-    tempo: 120,
-    // 14.2 (C#, the major 6th) is a chromatic neighbour, not an E blues tone — a
-    // common blues-rock colour. Kept, and flagged so the UI says so.
-    hasChromatic: true,
-    alphaTex:
-      "\\tempo 120 . :8 12.1 15.1{h} 12.1 14.2{h} 12.2 | 15.2 12.2 :4 14.3 12.3",
-  },
-  {
-    id: "major-pop",
-    title: "C 大調音階流行樂句",
-    scale: "major",
-    style: "Pop",
-    key: "C",
-    difficulty: "初級",
-    tempo: 90,
-    alphaTex: "\\tempo 90 . :8 8.1 10.1 8.2 10.2 12.2 9.3 10.3 12.3",
-  },
-  {
-    id: "major-jazz",
-    title: "C 大調爵士行走樂句",
-    scale: "major",
-    style: "Jazz",
-    key: "C",
-    difficulty: "進階",
-    tempo: 132,
-    // 8.3 (Eb, b3) and 9.2 (Ab, b6) are bebop chromatic approach tones, not C
-    // major scale tones. Kept (idiomatic for a jazz walking line), and flagged.
-    hasChromatic: true,
-    alphaTex:
-      "\\tempo 132 . :8 8.3 10.3 12.3 9.2 10.2 12.2 13.2 :4 8.1",
-  },
-  {
-    id: "dorian-funk",
-    title: "D 多里安放克樂句",
-    scale: "dorian",
-    style: "Funk",
-    key: "Dm",
-    difficulty: "中級",
-    tempo: 104,
-    alphaTex: "\\tempo 104 . :16 10.2 12.2 10.2 r :8 12.3 10.3 :4 12.4 10.4",
-  },
-  {
-    id: "dorian-jazz",
-    title: "D 多里安爵士樂句",
-    scale: "dorian",
-    style: "Jazz",
-    key: "Dm",
-    difficulty: "進階",
-    tempo: 126,
-    alphaTex:
-      "\\tempo 126 . :8 10.3 12.3{s} 14.3 10.2 12.2 13.2 :4 15.2 12.1",
-  },
-
-  // --- grid fill: one original lick for each previously-empty scale × style
-  // cell (10 → 25, so the two-axis filter never lands on an empty combo). Each
-  // is composed (not copied) and every fret.string note was verified to sit in
-  // the labeled scale with the SAME chroma math as data.test before landing.
   {
     id: "minor-pentatonic-funk",
     title: "A 小調五聲放克切音",
@@ -196,7 +95,7 @@ export const LICKS: Lick[] = [
     key: "Am",
     difficulty: "中級",
     tempo: 104,
-    alphaTex: "\\tempo 104 . :16 5.4 7.4 5.4 r :8 7.3 5.3 :16 5.2 8.2 5.2 r :4 5.1",
+    alphaTex: "\\tempo 104 . :16 7.4 r 7.4 5.4 :8 7.3 r :16 5.3 r 7.4 5.4 :8 5.5 r | :16 5.3 7.3 r 5.3 :8 7.4 5.4 :4 7.5 :8 5.5 r",
   },
   {
     id: "minor-pentatonic-pop",
@@ -206,7 +105,7 @@ export const LICKS: Lick[] = [
     key: "Am",
     difficulty: "初級",
     tempo: 92,
-    alphaTex: "\\tempo 92 . :8 5.3 7.3{h} 9.3 7.3 5.2 8.2 :4 5.1 r",
+    alphaTex: "\\tempo 92 . :8 9.3 8.2 10.2 8.2 :4 9.3 5.2 | :8 5.3 7.3 9.3 7.3 :8 8.2 10.2 :4 10.2",
   },
   {
     id: "minor-pentatonic-jazz",
@@ -219,8 +118,10 @@ export const LICKS: Lick[] = [
     // bebop enclosure move outside A minor pentatonic, so flagged.
     hasChromatic: true,
     tempo: 120,
-    alphaTex: "\\tempo 120 . :8 5.4 7.4 :16 5.3 7.3 :8 9.3 6.4 7.4 :4 5.5",
+    alphaTex: "\\tempo 120 . :8 5.4 7.4 :16 5.3 7.3 :8 9.3 6.4 7.4 :4 5.3",
   },
+
+  // --- major-pentatonic ---
   {
     id: "major-pentatonic-blues",
     title: "G 大調五聲藍調樂句",
@@ -229,7 +130,7 @@ export const LICKS: Lick[] = [
     key: "G",
     difficulty: "中級",
     tempo: 88,
-    alphaTex: "\\tempo 88 . :8 3.1 5.1{b (0 4)} 3.1 0.1 3.2 0.2 :4 0.1 r",
+    alphaTex: "\\tempo 88 . :8 3.1 5.1{b (0 4)} 3.1 0.1 3.2 0.2 5.2 3.2 | :8 0.2 8.2 5.2 3.2 :8 0.2 3.1 :4 3.1",
   },
   {
     id: "major-pentatonic-rock",
@@ -239,20 +140,68 @@ export const LICKS: Lick[] = [
     key: "G",
     difficulty: "中級",
     tempo: 116,
-    alphaTex: "\\tempo 116 . :8 7.1{b (0 4)} 5.1 8.2 5.2 7.3 4.3 :4 2.3 5.4",
+    alphaTex: "\\tempo 116 . :8 7.3{b (0 4)} 9.3 7.3{b (0 4)} 9.3 :8 7.3 4.3 2.3 0.3 | :8 5.4 7.4 5.4 2.3 :8 4.3 0.3 :4 3.1",
+  },
+  {
+    id: "major-pentatonic-funk",
+    title: "E 大調五聲放克切音",
+    scale: "major-pentatonic",
+    style: "Funk",
+    key: "E",
+    difficulty: "中級",
+    tempo: 100,
+    alphaTex: "\\tempo 100 . :16 9.3 11.3 9.3 r :8 9.4 11.4 :4 9.3 r.4",
+  },
+  {
+    id: "major-pentatonic-pop",
+    title: "G 大調五聲流行樂句",
+    scale: "major-pentatonic",
+    style: "Pop",
+    key: "G",
+    difficulty: "初級",
+    tempo: 96,
+    alphaTex: "\\tempo 96 . :8 0.1 3.1 5.1 3.1 :4 0.1 7.1 | :8 4.3 2.3 0.3 2.3 :2 0.3",
   },
   {
     id: "major-pentatonic-jazz",
-    title: "G 大調五聲爵士樂句",
+    title: "G 大調五聲爵士導音樂句",
     scale: "major-pentatonic",
     style: "Jazz",
     key: "G",
     difficulty: "進階",
-    // 6.3 (Db) is a chromatic approach resolving up to D (7.3), outside G major
-    // pentatonic, so flagged.
+    // Encloses the 3rd of Gmaj7 (B) with chromatic approach tones, then resolves
+    // and holds it — out-of-scale approaches, so flagged.
     hasChromatic: true,
     tempo: 126,
-    alphaTex: "\\tempo 126 . :8 4.3 7.3 9.3 :16 6.3 7.3 :8 9.3 12.3 :4 14.3",
+    alphaTex: "\\tempo 126 . :8 8.2 10.2 8.3 9.3 :16 13.2 11.2 :8 12.2 :4 8.2 | :8 10.2 12.2 9.3 12.3 :2 12.2",
+  },
+
+  // --- blues ---
+  {
+    id: "blues-blues",
+    title: "A 藍調音階經典句",
+    scale: "blues",
+    style: "Blues",
+    key: "A",
+    difficulty: "中級",
+    // E-F-F# is a chromatic passing walk (F, F# are outside the A blues scale) —
+    // a blues idiom, so flagged.
+    hasChromatic: true,
+    tempo: 72,
+    alphaTex: "\\tempo 72 . :8 5.1 8.1{b (0 4)} 5.2 6.2 7.2 8.2 :4 5.3 | :8 7.4 5.4 7.4 10.4 :8 13.4 12.4 :4 7.4",
+  },
+  {
+    id: "blues-rock",
+    title: "E 藍調搖滾樂句",
+    scale: "blues",
+    style: "Rock",
+    key: "E",
+    // 14.2 (C#, the major 6th) is a chromatic neighbour, not an E blues tone — a
+    // common blues-rock colour, so flagged.
+    hasChromatic: true,
+    difficulty: "進階",
+    tempo: 120,
+    alphaTex: "\\tempo 120 . :8 12.1 15.1{h} 12.1 14.2{h} 12.2 15.2 12.2 14.3 | :8 12.3 14.3 12.3 9.4 :8 8.4 9.4 :4 14.4",
   },
   {
     id: "blues-funk",
@@ -272,22 +221,23 @@ export const LICKS: Lick[] = [
     key: "A",
     difficulty: "初級",
     tempo: 84,
-    alphaTex: "\\tempo 84 . :8 5.3 7.3 8.3 9.3 5.2 8.2 :4 5.1 r",
+    alphaTex: "\\tempo 84 . :8 7.4 5.3 7.3 8.3 9.3 7.3 :4 5.3 | :8 5.3 7.4 5.4 7.4 :2 7.4",
   },
   {
     id: "blues-jazz",
-    title: "A 藍調爵士半音樂句",
+    title: "A 屬七藍調爵士樂句",
     scale: "blues",
     style: "Jazz",
     key: "A",
     difficulty: "進階",
-    // 6.4 (Ab) is a chromatic approach into A (7.4), a bebop idiom — outside the A
-    // blues scale, so flagged so the UI badges it rather than implying it's a
-    // scale tone.
+    // 6.3 (Db) is a chromatic approach into the 3rd (C#-ish) target over A7;
+    // outside the A blues scale, so flagged.
     hasChromatic: true,
     tempo: 138,
-    alphaTex: "\\tempo 138 . :8 5.3 8.3 9.3 5.4 6.4 7.4 :4 10.4 12.4",
+    alphaTex: "\\tempo 138 . :8 2.3 5.3 7.3 8.3 :16 9.3 7.3 :8 5.3 6.3 7.3 | :8 9.3 12.3 9.3 7.3 :4 5.3 :8 2.3 r",
   },
+
+  // --- major (Ionian) ---
   {
     id: "major-blues",
     title: "C 大調音階藍調樂句",
@@ -296,7 +246,7 @@ export const LICKS: Lick[] = [
     key: "C",
     difficulty: "中級",
     tempo: 80,
-    alphaTex: "\\tempo 80 . :8 8.2 10.2 8.1 10.1{b (0 4)} 8.1 6.2 8.2 :4 9.3",
+    alphaTex: "\\tempo 80 . :8 8.2 10.2{b (0 4)} 8.2 6.2 5.2 6.2 8.2 10.2 | :8 12.2 13.2 12.2 10.2 :8 8.2 6.2 :4 8.1",
   },
   {
     id: "major-rock",
@@ -306,18 +256,43 @@ export const LICKS: Lick[] = [
     key: "C",
     difficulty: "中級",
     tempo: 120,
-    alphaTex: "\\tempo 120 . :8 8.1 10.1 12.1 8.2{h} 10.2 12.2 9.3 :4 10.3 12.3",
+    alphaTex: "\\tempo 120 . :8 8.1 10.1 12.1 8.2{h} 10.2 12.2 13.2 10.3 | :8 12.3 9.3 7.4 9.4 10.4 9.4 :4 8.1",
   },
   {
     id: "major-funk",
-    title: "C 大調音階放克切音",
+    title: "C 大調音階放克樂句",
     scale: "major",
     style: "Funk",
     key: "C",
     difficulty: "中級",
     tempo: 108,
-    alphaTex: "\\tempo 108 . :16 7.3 10.3 7.3 r :8 9.3 5.3 :16 8.2 10.2 8.2 r :4 8.1",
+    alphaTex: "\\tempo 108 . :8 8.2 :16 10.2 8.2 :8 6.2 5.2 :2 r | :16 12.1 10.1 8.1 7.1 :8 5.1 3.1 :8 8.1 7.1 :4 8.1",
   },
+  {
+    id: "major-pop",
+    title: "C 大調音階流行樂句",
+    scale: "major",
+    style: "Pop",
+    key: "C",
+    difficulty: "初級",
+    tempo: 90,
+    alphaTex: "\\tempo 90 . :8 8.2 5.2 8.1 5.1 :4 9.3 10.3 | :8 12.3 10.3 9.3 8.2 :8 5.2 10.1 :4 8.1",
+  },
+  {
+    id: "major-jazz",
+    title: "C 大調爵士導音樂句",
+    scale: "major",
+    style: "Jazz",
+    key: "C",
+    difficulty: "進階",
+    // Bebop enclosures: F+Eb around the 3rd (E), then C+Bb around the 7th (B),
+    // resolving to C. Eb/Bb are out-of-scale approach tones, so flagged.
+    hasChromatic: true,
+    tempo: 132,
+    alphaTex: "\\tempo 132 . :8 3.2 5.2 8.2 10.2 :8 6.2 :16 4.2 5.2 :4 5.2 | :8 7.3 9.3 12.3 14.3 :16 13.2 11.2 :8 12.2 :4 13.2",
+  },
+
+  // --- dorian ---
   {
     id: "dorian-blues",
     title: "D 多里安藍調樂句",
@@ -326,7 +301,7 @@ export const LICKS: Lick[] = [
     key: "Dm",
     difficulty: "中級",
     tempo: 76,
-    alphaTex: "\\tempo 76 . :8 12.4 15.4 12.3 10.3 9.4 12.4 :4 9.4 7.4",
+    alphaTex: "\\tempo 76 . :8 12.4 14.4 15.4{b (0 4)} 14.4 12.4 10.4 :4 12.4 | :8 15.4 14.4 12.4 10.4 :8 9.4 10.4 :4 12.4",
   },
   {
     id: "dorian-rock",
@@ -339,6 +314,16 @@ export const LICKS: Lick[] = [
     alphaTex: "\\tempo 118 . :8 12.4 14.4 15.4{b (0 4)} 12.4 :16 9.4 12.4 :8 14.4 :4 12.4",
   },
   {
+    id: "dorian-funk",
+    title: "D 多里安放克樂句",
+    scale: "dorian",
+    style: "Funk",
+    key: "Dm",
+    difficulty: "中級",
+    tempo: 104,
+    alphaTex: "\\tempo 104 . :8 12.4 :16 10.4 12.4 :8 r 14.4 :16 12.4 10.4 9.4 r :4 12.4",
+  },
+  {
     id: "dorian-pop",
     title: "D 多里安流行樂句",
     scale: "dorian",
@@ -346,7 +331,20 @@ export const LICKS: Lick[] = [
     key: "Dm",
     difficulty: "初級",
     tempo: 96,
-    alphaTex: "\\tempo 96 . :8 12.4 14.4 15.4 12.3 14.3 12.2 13.2 :4 12.4",
+    alphaTex: "\\tempo 96 . :8 12.4 14.4 12.4 10.4 :4 9.4 :8 12.4 14.4 | :8 12.4 10.4 9.4 10.4 :8 9.4 10.4 :4 12.4",
+  },
+  {
+    id: "dorian-jazz",
+    title: "D 多里安爵士導音樂句",
+    scale: "dorian",
+    style: "Jazz",
+    key: "Dm",
+    difficulty: "進階",
+    // Encloses the b3 (F) then approaches the b7 (C) over Dm7 with chromatic
+    // tones, resolving to D. Out-of-scale approaches, so flagged.
+    hasChromatic: true,
+    tempo: 126,
+    alphaTex: "\\tempo 126 . :8 7.3 9.3 :16 11.3 10.3 :8 9.3 10.3 12.3 :4 10.3 | :8 5.4 7.4 9.4 10.4 :16 11.4 10.4 :8 12.4 :4 12.4",
   },
 ];
 
