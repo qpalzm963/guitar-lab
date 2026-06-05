@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { Scale, Chord, Key } from "tonal";
+import { Scale, Chord, Key, Interval, Note } from "tonal";
 import { LESSONS, ORDERED_LESSONS, TOTAL_LESSONS, getLesson } from "./data";
+import { LESSON_CONTENT } from "./lessonContent";
 import { ALL_ITEMS } from "@/lib/curriculum/data";
 
 // Routes a lesson tool link is allowed to point to. A tool pointing anywhere else
@@ -20,9 +21,9 @@ const REAL_ROUTES = new Set([
 const CURRICULUM_IDS = new Set(ALL_ITEMS.map((i) => i.id));
 
 describe("course data integrity", () => {
-  it("has exactly 5 lessons", () => {
-    expect(LESSONS.length).toBe(5);
-    expect(TOTAL_LESSONS).toBe(5);
+  it("has exactly 6 lessons", () => {
+    expect(LESSONS.length).toBe(6);
+    expect(TOTAL_LESSONS).toBe(6);
   });
 
   it("every lesson slug is unique", () => {
@@ -32,14 +33,46 @@ describe("course data integrity", () => {
     expect(new Set(slugs).size).toBe(slugs.length);
   });
 
-  it("every lesson order is unique and they cover 1..5", () => {
+  it("every lesson order is unique and they cover 1..6", () => {
     const orders = LESSONS.map((l) => l.order).sort((a, b) => a - b);
-    expect(orders).toEqual([1, 2, 3, 4, 5]);
+    expect(orders).toEqual([1, 2, 3, 4, 5, 6]);
   });
 
   it("ORDERED_LESSONS is sorted by order", () => {
     const orders = ORDERED_LESSONS.map((l) => l.order);
     expect(orders).toEqual([...orders].sort((a, b) => a - b));
+  });
+
+  it("lessons are in the rebuilt teaching order", () => {
+    // The point of the rebuild: physical fundamentals first, then the theory
+    // spine intervals → scales → chords → diatonic, then CAGED as the capstone.
+    // Pinning the exact slug sequence (not just that orders are the set {1..6})
+    // guards the deliverable — a swapped order would still pass the set check.
+    expect(ORDERED_LESSONS.map((l) => l.slug)).toEqual([
+      "basics",
+      "intervals",
+      "scale",
+      "chord-system",
+      "diatonic",
+      "caged",
+    ]);
+  });
+
+  it("every lesson has written content with objectives and sections", () => {
+    // Lesson metadata (data.ts) and its prose (lessonContent.ts) live in two
+    // files with no compile-time link: a lesson can exist in LESSONS while its
+    // LESSON_CONTENT entry is missing or mistyped, and the page would render a
+    // hollow body (LessonView guards `content &&`) while the build and every
+    // other test stay green. This guards that every lesson has real content.
+    for (const l of LESSONS) {
+      const content = LESSON_CONTENT[l.slug];
+      expect(content, `missing LESSON_CONTENT["${l.slug}"]`).toBeDefined();
+      if (!content) continue;
+      expect(content.objectives.length).toBeGreaterThan(0);
+      expect(content.sections.length).toBeGreaterThan(0);
+      expect(content.sections.every((s) => s.heading.length > 0)).toBe(true);
+      expect(content.sections.every((s) => s.paragraphs.length > 0)).toBe(true);
+    }
   });
 
   it("getLesson resolves a known slug and rejects an unknown one", () => {
@@ -178,5 +211,25 @@ describe("quiz answers are theory-correct (tonal cross-check)", () => {
     expect(text).toContain("Dm7");
     expect(text).toContain("G7");
     expect(text).toContain("Cmaj7");
+  });
+
+  it("a major 3rd is 4 semitones (intervals-q2)", () => {
+    expect(Interval.semitones("3M")).toBe(4);
+    expect(correctText("intervals", "intervals-q2")).toContain("4 個半音");
+  });
+
+  it("C up a perfect 5th is G (intervals-q3)", () => {
+    expect(Note.transpose("C", "5P")).toBe("G");
+    expect(correctText("intervals", "intervals-q3")).toContain("G");
+  });
+
+  it("an octave is 12 semitones (intervals-q4)", () => {
+    expect(Interval.semitones("8P")).toBe(12);
+    expect(correctText("intervals", "intervals-q4")).toContain("12 個半音");
+  });
+
+  it("Cm7b5 is C Eb Gb Bb (chord-q6)", () => {
+    expect(Chord.get("Cm7b5").notes).toEqual(["C", "Eb", "Gb", "Bb"]);
+    expect(correctText("chord-system", "chord-q6")).toContain("C Eb Gb Bb");
   });
 });
