@@ -5,12 +5,6 @@ import Link from "next/link";
 import { ORDERED_LESSONS, TOTAL_LESSONS } from "@/lib/course/data";
 import { useCourse } from "@/lib/store/course";
 
-// Topics the teacher still delivers live (video / handouts), not as built tools
-// or PDFs in this app. We surface them as a light placeholder so the course feels
-// complete without inventing content. These mirror the 6-area map's C-category
-// areas that are "lesson content, no interactive tool".
-const TEACHER_TOPICS = ["技巧", "曲風", "編曲", "器材"];
-
 function LessonCard({
   slug,
   order,
@@ -97,24 +91,6 @@ export function CourseList() {
           />
         ))}
       </div>
-
-      {/* Teacher-delivered content placeholder — no fake content, just a note. */}
-      <section className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-4">
-        <h2 className="text-sm font-semibold text-gray-700">老師補充教學內容</h2>
-        <p className="mt-1 text-xs text-gray-500">
-          以下主題由老師以影片/講義方式補充教學,本工具不提供對應內容:
-        </p>
-        <div className="mt-2 flex flex-wrap gap-2">
-          {TEACHER_TOPICS.map((t) => (
-            <span
-              key={t}
-              className="rounded-md border border-gray-200 bg-white px-2 py-0.5 text-xs text-gray-500"
-            >
-              {t}(教學中)
-            </span>
-          ))}
-        </div>
-      </section>
     </div>
   );
 }
