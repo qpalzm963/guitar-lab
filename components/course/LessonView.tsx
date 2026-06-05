@@ -128,7 +128,7 @@ export function LessonView({ lesson }: { lesson: Lesson }) {
         </div>
         {lesson.curriculumItemIds.length > 0 ? (
           <p className="mt-3 text-xs text-gray-500">
-            對應課程地圖項目:
+            涵蓋主題:
             {lesson.curriculumItemIds
               .map((id) => ITEM_TITLE.get(id) ?? id)
               .join("、")}

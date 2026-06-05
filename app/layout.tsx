@@ -16,14 +16,13 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "guitar-lab",
   description:
-    "把吉他樂理變成看得見、可練習的工具:互動指板、和弦與音階圖、CAGED、音程練習、進階和聲、節拍器與樂句庫,搭配課程地圖記錄學習進度。",
+    "把吉他樂理變成看得見、可練習的工具:互動指板、和弦與音階圖、CAGED、音程練習、進階和聲、節拍器與樂句庫。",
 };
 
 // Global nav targets, in curriculum order. A plain server-rendered list (no
 // client state) so the header works in the static export and never ships JS.
 const NAV_LINKS: { href: string; label: string }[] = [
   { href: "/course", label: "課程" },
-  { href: "/curriculum", label: "課程地圖" },
   { href: "/fretboard", label: "指板" },
   { href: "/chords", label: "和弦" },
   { href: "/caged", label: "CAGED" },

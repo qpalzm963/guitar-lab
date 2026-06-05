@@ -27,12 +27,7 @@ const GROUPS: Group[] = [
       {
         href: "/course",
         title: "課程",
-        desc: "依老師教材整理的五堂課,含大綱、工具與小測驗。",
-      },
-      {
-        href: "/curriculum",
-        title: "課程地圖",
-        desc: "六大領域的學習路徑,記錄已學進度並連到工具。",
+        desc: "循序漸進的六堂課,含大綱、工具與小測驗。",
       },
     ],
   },
@@ -110,7 +105,7 @@ export default function Home() {
           把吉他樂理變成看得見、可練習的工具
         </h1>
         <p className="mt-2 max-w-2xl text-gray-600">
-          互動指板、和弦與音階圖、節拍器與樂句庫,搭配老師教材的課程地圖,從一個地方開始學。
+          互動指板、和弦與音階圖、節拍器與樂句庫,從一個地方開始學。
         </p>
         <div className="mt-5">
           <Button href="/course">開始上課 →</Button>
