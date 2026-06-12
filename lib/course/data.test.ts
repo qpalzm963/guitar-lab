@@ -21,9 +21,9 @@ const REAL_ROUTES = new Set([
 const CURRICULUM_IDS = new Set(ALL_ITEMS.map((i) => i.id));
 
 describe("course data integrity", () => {
-  it("has exactly 6 lessons", () => {
-    expect(LESSONS.length).toBe(6);
-    expect(TOTAL_LESSONS).toBe(6);
+  it("has exactly 7 lessons", () => {
+    expect(LESSONS.length).toBe(7);
+    expect(TOTAL_LESSONS).toBe(7);
   });
 
   it("every lesson slug is unique", () => {
@@ -33,9 +33,9 @@ describe("course data integrity", () => {
     expect(new Set(slugs).size).toBe(slugs.length);
   });
 
-  it("every lesson order is unique and they cover 1..6", () => {
+  it("every lesson order is unique and they cover 1..7", () => {
     const orders = LESSONS.map((l) => l.order).sort((a, b) => a - b);
-    expect(orders).toEqual([1, 2, 3, 4, 5, 6]);
+    expect(orders).toEqual([1, 2, 3, 4, 5, 6, 7]);
   });
 
   it("ORDERED_LESSONS is sorted by order", () => {
@@ -45,8 +45,9 @@ describe("course data integrity", () => {
 
   it("lessons are in the rebuilt teaching order", () => {
     // The point of the rebuild: physical fundamentals first, then the theory
-    // spine intervals → scales → chords → diatonic, then CAGED as the capstone.
-    // Pinning the exact slug sequence (not just that orders are the set {1..6})
+    // spine intervals → scales → chords → diatonic, then CAGED as the capstone,
+    // and improv last as the applied course that puts the spine to work.
+    // Pinning the exact slug sequence (not just that orders are the set {1..7})
     // guards the deliverable — a swapped order would still pass the set check.
     expect(ORDERED_LESSONS.map((l) => l.slug)).toEqual([
       "basics",
@@ -55,6 +56,7 @@ describe("course data integrity", () => {
       "chord-system",
       "diatonic",
       "caged",
+      "improv",
     ]);
   });
 
@@ -231,5 +233,26 @@ describe("quiz answers are theory-correct (tonal cross-check)", () => {
   it("Cm7b5 is C Eb Gb Bb (chord-q6)", () => {
     expect(Chord.get("Cm7b5").notes).toEqual(["C", "Eb", "Gb", "Bb"]);
     expect(correctText("chord-system", "chord-q6")).toContain("C Eb Gb Bb");
+  });
+
+  it("A C E is the Am triad (improv-q4)", () => {
+    expect(Chord.get("Am").notes).toEqual(["A", "C", "E"]);
+    expect(correctText("improv", "improv-q4")).toContain("Am");
+  });
+
+  it("the improv 小地圖 root anchors are real frets", () => {
+    // The lesson claims the roots inside strings 1–4 / frets 5–8 sit on string 4
+    // fret 7 and string 1 fret 5. Standard tuning: string 4 = D3, string 1 = E4.
+    // A wrong anchor here would teach the learner to "come home" to a non-root
+    // (an earlier draft wrongly placed a root on string 3 fret 7, which is D).
+    expect(Note.pitchClass(Note.transpose("D3", Interval.fromSemitones(7)))).toBe(
+      "A",
+    );
+    expect(Note.pitchClass(Note.transpose("E4", Interval.fromSemitones(5)))).toBe(
+      "A",
+    );
+    expect(Note.pitchClass(Note.transpose("G3", Interval.fromSemitones(7)))).toBe(
+      "D",
+    );
   });
 });

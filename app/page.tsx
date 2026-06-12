@@ -27,7 +27,7 @@ const GROUPS: Group[] = [
       {
         href: "/course",
         title: "課程",
-        desc: "循序漸進的六堂課,含大綱、工具與小測驗。",
+        desc: "循序漸進的七堂課,含大綱、工具與小測驗。",
       },
     ],
   },

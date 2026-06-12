@@ -13,14 +13,49 @@ import {
 } from "@/lib/licks/data";
 import { ToggleButton } from "@/components/ui/ToggleButton";
 import { FieldGroup } from "@/components/ui/Field";
+import {
+  useInitialParams,
+  pickAllowed,
+} from "@/lib/url/useInitialParams";
 
 // Two-axis browser: a 音階 (scale) selector AND a 曲風 (style) selector. Either can
 // be "全部" (no filter on that axis); the intersection drives the list. Selecting
 // a lick loads it into the AlphaTabPlayer. This scale×style index is the viewer's
 // differentiator over a flat tab list.
 export function LicksViewer() {
-  const [scale, setScale] = useState<ScaleId | null>(null);
-  const [style, setStyle] = useState<StyleId | null>(null);
+  // Deep-link seeding: a lesson link like /licks?scale=minor-pentatonic&style=Blues
+  // pre-selects both axes. The URL is external state (useInitialParams), so the
+  // seeded value is DERIVED during render rather than pushed into state from an
+  // effect (the repo's lint forbids setState-in-effect). useState holds only the
+  // user's explicit choice: `undefined` = untouched (fall back to the deep link),
+  // `null` = an explicit 全部. Invalid/missing params are ignored, leaving 全部/全部.
+  const params = useInitialParams();
+  const [scaleChoice, setScaleChoice] = useState<ScaleId | null | undefined>(
+    undefined,
+  );
+  const [styleChoice, setStyleChoice] = useState<StyleId | null | undefined>(
+    undefined,
+  );
+  const scale: ScaleId | null =
+    scaleChoice !== undefined
+      ? scaleChoice
+      : ((params &&
+          (pickAllowed(
+            params,
+            "scale",
+            SCALES.map((x) => x.id),
+          ) as ScaleId | undefined)) ??
+        null);
+  const style: StyleId | null =
+    styleChoice !== undefined
+      ? styleChoice
+      : ((params &&
+          (pickAllowed(
+            params,
+            "style",
+            STYLES.map((x) => x.id),
+          ) as StyleId | undefined)) ??
+        null);
 
   const matches = useMemo(() => filterLicks(scale, style), [scale, style]);
 
@@ -36,14 +71,17 @@ export function LicksViewer() {
       {/* Axis 1: 音階 */}
       <FieldGroup label="音階 Scale">
         <div className="flex flex-wrap gap-1">
-          <ToggleButton active={scale === null} onClick={() => setScale(null)}>
+          <ToggleButton
+            active={scale === null}
+            onClick={() => setScaleChoice(null)}
+          >
             全部
           </ToggleButton>
           {SCALES.map((s) => (
             <ToggleButton
               key={s.id}
               active={scale === s.id}
-              onClick={() => setScale(s.id)}
+              onClick={() => setScaleChoice(s.id)}
             >
               {s.label}
             </ToggleButton>
@@ -54,14 +92,17 @@ export function LicksViewer() {
       {/* Axis 2: 曲風 */}
       <FieldGroup label="曲風 Style">
         <div className="flex flex-wrap gap-1">
-          <ToggleButton active={style === null} onClick={() => setStyle(null)}>
+          <ToggleButton
+            active={style === null}
+            onClick={() => setStyleChoice(null)}
+          >
             全部
           </ToggleButton>
           {STYLES.map((s) => (
             <ToggleButton
               key={s.id}
               active={style === s.id}
-              onClick={() => setStyle(s.id)}
+              onClick={() => setStyleChoice(s.id)}
             >
               {s.label}
             </ToggleButton>

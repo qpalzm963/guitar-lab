@@ -1,4 +1,4 @@
-// The course: six structured, navigable lessons. Each lesson carries
+// The course: seven structured, navigable lessons. Each lesson carries
 // an ORIGINAL written explanation (in lessonContent.ts), an outline of chapters,
 // the curriculum items it covers (so the course and the 6-area map stay in sync),
 // the built tools that practice the topic, and an ORIGINAL multiple-choice quiz.
@@ -13,8 +13,9 @@
 //
 // Pedagogical order (rebuilt from a teacher's view, not a PDF's table of
 // contents): physical fundamentals first, then the theory spine
-// intervals → scales → chords → diatonic harmony, with CAGED last as the
-// integrative capstone that ties chords and scales onto the whole neck.
+// intervals → scales → chords → diatonic harmony, with CAGED as the
+// integrative capstone that ties chords and scales onto the whole neck, and
+// improvisation last as the applied course that puts the whole spine to work.
 
 import type { CurriculumTool } from "@/lib/curriculum/data";
 
@@ -541,6 +542,110 @@ export const LESSONS: Lesson[] = [
         answer: 1,
         explanation:
           "CAGED 是整合地圖:知道現在是哪個指型,就同時知道附近音階與和弦音的落點,獨奏時更容易瞄準想要的音。",
+      },
+    ],
+  },
+  {
+    slug: "improv",
+    title: "即興入門 Improvisation",
+    summary:
+      "不用背完指板:用一張小地圖(A 小調五聲的八個音)加四個限制遊戲,從 Drone 到伴奏開始即興。",
+    order: 7,
+    chapters: [
+      "即興是什麼,以及本課的玩法",
+      "小地圖:第 1–4 弦、第 5–8 格的 Am 五聲沙盒",
+      "遊戲一:一句樂句撐整首",
+      "遊戲二:三個音與節奏動機",
+      "遊戲三:呼叫與回應+目標音",
+      "遊戲四:先唱再彈",
+      "應用場:從 Drone 到伴奏",
+      "練習系統:每日 30 分鐘與擴張",
+    ],
+    curriculumItemIds: [
+      "arr-write-solo",
+      "rhythm-rests",
+      "licks-minor-pentatonic",
+      "licks-blues",
+    ],
+    tools: ["/licks", "/practice", "/fretboard", "/caged"],
+    toolParams: {
+      "/licks": "?scale=minor-pentatonic&style=Blues",
+      "/fretboard": "?root=A&scale=minor pentatonic",
+      "/caged": "?root=A&quality=minor",
+    },
+    quiz: [
+      {
+        id: "improv-q1",
+        prompt: "伴奏放下去就腦袋一片空白,下列哪個調整最對症?",
+        options: [
+          "再多背一條新音階,選擇變多就有靈感",
+          "把五個把位全部背熟再開始即興",
+          "限制材料:整首只准彈一句熟的樂句和它的變形",
+          "把伴奏速度調快,逼自己反應",
+        ],
+        answer: 2,
+        explanation:
+          "空白的原因通常是選擇太多、沒有起點,不是會的太少;限制材料(一句樂句、三個音)反而給了起點,把注意力從「選什麼」搬到「怎麼說」。",
+      },
+      {
+        id: "improv-q2",
+        prompt: "呼叫與回應的玩法裡,哪種句尾聽起來最像「問句」(還沒講完)?",
+        options: [
+          "落在根音 A 的長音",
+          "停在 4 度或 b7 度等不安定音上",
+          "落在和弦音 1、b3、5 之一",
+          "把最後一個音彈得特別小聲",
+        ],
+        answer: 1,
+        explanation:
+          "安定音(和弦音 1、b3、5)聽起來像「到家」;停在 4、b7 這類不安定音會留下懸念,像話只說一半——這就是音程課裡安定/不安定的應用。",
+      },
+      {
+        id: "improv-q3",
+        prompt: "「三個音的遊戲」故意只准用三個音,目的是什麼?",
+        options: [
+          "三個音的組合最好聽",
+          "把注意力從「選音」搬到節奏、強弱與語氣",
+          "為了把速度練快",
+          "為了把指板音名背起來",
+        ],
+        answer: 1,
+        explanation:
+          "音被鎖死後,唯一能變的就是節奏、停頓、強弱與語氣——而這些正是讓即興「像音樂」的東西;大部分人卡住是因為注意力全在選音上。",
+      },
+      {
+        id: "improv-q4",
+        prompt: "三個音遊戲用的 A、C、E,這三個音合起來正好是哪個和弦?",
+        options: ["A 大三和弦", "C 大三和弦", "A 小三和弦(Am)", "E 小三和弦(Em)"],
+        answer: 2,
+        explanation:
+          "A C E = Am(A 小三和弦):根音 A、小三度 C、完全五度 E。所以這三個音在 Am 伴奏上怎麼彈都安定——它們就是和弦音。",
+      },
+      {
+        id: "improv-q5",
+        prompt: "在小地圖上即興到一半迷路了,最好的第一反應是?",
+        options: [
+          "停下來,從頭再開始",
+          "低頭看指板圖,找回剛才彈到哪",
+          "換一個把位重新出發",
+          "滑回最近的根音 A,從那裡繼續",
+        ],
+        answer: 3,
+        explanation:
+          "根音是錨點:迷路就回根音,音樂不中斷。迷路就停下重來反而練成「一錯就斷」的習慣;這也是為什麼小地圖階段只要求記熟根音位置。",
+      },
+      {
+        id: "improv-q6",
+        prompt: "「即興時還是需要瞄一眼音階圖才敢彈」——這時該開始背第二個把位嗎?",
+        options: [
+          "該,把位越多選擇越多",
+          "不該:先滿足「不用看圖」與「迷路手自動回根音」兩個條件再擴張",
+          "該,反正之後都要背",
+          "不該,即興永遠只需要一個把位",
+        ],
+        answer: 1,
+        explanation:
+          "擴張的兩個條件:即興時不用看圖、迷路時手會自動回根音。還在看圖代表這塊地圖還沒變成功能記憶,先用熟再擴張,否則兩個把位都半生不熟。",
       },
     ],
   },
