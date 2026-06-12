@@ -8,6 +8,7 @@ import { ALL_ITEMS } from "@/lib/curriculum/data";
 import { LESSON_CONTENT } from "@/lib/course/lessonContent";
 import { useCourse } from "@/lib/store/course";
 import { Quiz } from "./Quiz";
+import { LessonFigure } from "./LessonFigures";
 
 // zh-TW labels for the "相關工具" links. Kept here (not in curriculum data) because
 // these are course-page presentation strings; the routes themselves are validated
@@ -75,6 +76,7 @@ export function LessonView({ lesson }: { lesson: Lesson }) {
                   {p}
                 </p>
               ))}
+              {s.diagram ? <LessonFigure id={s.diagram} /> : null}
               {s.bullets && s.bullets.length > 0 ? (
                 <ul className="list-disc space-y-1 pl-6 text-sm text-gray-700">
                   {s.bullets.map((b) => (

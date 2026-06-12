@@ -39,12 +39,26 @@ export interface LessonToolLink {
   href: string;
 }
 
+/**
+ * Ids of the inline figures a section can embed. Each id MUST have a renderer
+ * in components/course/LessonFigures.tsx — the registry there is a
+ * Record<LessonFigureId, …>, so adding an id here without a renderer (or vice
+ * versa) is a compile error. Content stays pure data; React stays in components.
+ */
+export type LessonFigureId =
+  | "improv-small-map"
+  | "improv-rhythm-motif"
+  | "improv-call-response"
+  | "improv-daily-30";
+
 /** One readable section of a lesson. */
 export interface LessonSection {
   /** zh-TW section heading. */
   heading: string;
   /** One or more zh-TW paragraphs (plain prose). */
   paragraphs: string[];
+  /** Optional inline figure rendered between the paragraphs and the bullets. */
+  diagram?: LessonFigureId;
   /** Optional quick-reference bullet points (zh-TW). */
   bullets?: string[];
   /** Optional deep link into a tool that practices this section. */
@@ -799,6 +813,7 @@ export const LESSON_CONTENT: Record<string, LessonContent> = {
           "完全不用等指板背完才開始即興——順序應該倒過來:先在一小塊地圖上即興,靠即興把那塊地圖用熟,再擴張。你的小地圖是:第 1 到第 4 弦、第 5 到第 8 格。這個框裡的 A 小調五聲(A C D E G)總共八個音:第 1 弦第 5 格(A)與第 8 格(C)、第 2 弦第 5 格(E)與第 8 格(G)、第 3 弦第 5 格(C)與第 7 格(D)、第 4 弦第 5 格(G)與第 7 格(A)。它就是第三課 A 小調五聲第一把位靠細弦的那一半。",
           "八個音裡只需要先記住一件事:根音 A 在哪——第 4 弦第 7 格、第 1 弦第 5 格。根音是錨點,並附帶一條「迷路協定」:即興到一半迷路了,不要停下重來,手滑回最近的根音,從那裡繼續。跟著伴奏在這八個音裡打滾,你的手和耳朵會記住「這裡是回家的音、那裡停了會癢」——這是功能記憶,比看著圖背的視覺記憶牢固得多;背指板真正的目標,本來就不是說得出每格的音名,而是閉著眼知道安全的音在哪。",
         ],
+        diagram: "improv-small-map",
         bullets: [
           "小地圖:第 1–4 弦、第 5–8 格,共 8 個 Am 五聲音。",
           "根音錨點:第 4 弦第 7 格、第 1 弦第 5 格 = A。",
@@ -833,6 +848,7 @@ export const LESSON_CONTENT: Record<string, LessonContent> = {
           "更極端的限制:整首伴奏只准用三個音——A、C、E。這三個音正好是 Am 和弦的組成音(根音、小三度、完全五度),所以在 Am 的伴奏上怎麼彈都安定。音被鎖死後,你唯一能變的就是節奏、停頓、強弱、長短音——而這些恰好是讓即興「像音樂」的東西。大部分人卡住,是因為注意力全放在選音上;這個遊戲強迫你把注意力搬到「怎麼說」。",
           "搭配一個最便宜的工具:節奏動機——抓一個短短的節奏型,同樣的節奏重複幾次、每次只換音。同節奏不同音,聽的人立刻覺得「這是一個句子在發展」,而不是音階在跑。不需要任何新技巧:強弱對比、長音短音,用你已經會的就夠。",
         ],
+        diagram: "improv-rhythm-motif",
         bullets: [
           "規則:只准用 A、C、E(= Am 和弦音 1、b3、5)。",
           "節奏動機:同一節奏型重複,只換音。",
@@ -846,6 +862,7 @@ export const LESSON_CONTENT: Record<string, LessonContent> = {
           "把伴奏當成對話對象:彈一個短句(問句),空兩小節什麼都不彈,再回一個短句(答句)。「不知道彈什麼」往往是因為想連續不斷地彈;強制留白後,每句之間你有時間想好下一句,而且聽起來立刻更像樂句而不是跑音階。",
           "問句和答句的差別在句尾落在哪個音——這裡要正式命名一個概念:目標音。在 Am 上,安定音就是和弦音 1、b3、5(A、C、E),句尾落在這裡像「到家」;小地圖裡剩下的 4、b7(D、G)是不安定音,停在這裡像話只說一半、留下懸念。問句停不安定音、答句落安定音,一問一答就成立了。這正是第二課音程(A 到 C 是小三度、和弦音的由來)與第五課「解決」概念的實際應用。本課先只在 Drone 或單一和弦上練目標音;跟著和弦進行換目標音,是下一階段的課題。",
         ],
+        diagram: "improv-call-response",
         bullets: [
           "結構:兩小節彈、兩小節留白,問句→答句。",
           "安定音(目標音):1、b3、5 = A、C、E(就是 Am 和弦音)。",
@@ -892,6 +909,7 @@ export const LESSON_CONTENT: Record<string, LessonContent> = {
           "把整課收攏成一個可以每天執行的流程,共 30 分鐘:暖手 5 分鐘(開節拍器在小地圖內爬格子,沿用第一課的鐵律:放鬆、先慢而準)→ 詞彙 10 分鐘(一句樂句變三句:改結尾音、改節奏、移位置)→ 地圖 5 分鐘(不看圖,在小地圖裡反覆回到兩個根音)→ 應用 10 分鐘(Drone 或伴奏,四個遊戲輪著玩,最後錄 30 秒)。一週固定一組材料,別天天換;週末聽回放對比週初,找出最常犯的問題。",
           "什麼時候擴張地圖?滿足兩個條件:一、即興時不用看指板圖;二、迷路時手會自動回到根音。達成後一次只加一小塊——先把第 5、6 弦補進來湊滿完整的第一把位,再沿著 CAGED 的指型接到下一個把位,重點練兩個把位的接縫(同一句樂句,一半在這個把位、一半滑進下一個把位彈完)。節奏抓「一個月一個調、兩個把位」就很快了;貪多是背不起來的最大原因。學完本課的下一步,是跟著和弦進行換目標音——到時候第五課的順階和弦就會直接派上用場。",
         ],
+        diagram: "improv-daily-30",
         bullets: [
           "每日 30 分:暖手 5 / 一句變三句 10 / 小地圖根音 5 / 應用+錄音 10。",
           "擴張兩條件:不用看圖、迷路手自動回根音。",
